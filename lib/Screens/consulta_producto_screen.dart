@@ -1,11 +1,3 @@
-import 'package:fabrics_app/Components/scan_screen.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-
-import 'package:flutter_svg/flutter_svg.dart';
-import 'package:fluttertoast/fluttertoast.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:intl/intl.dart';
 import 'package:fabrics_app/Components/card_movs.dart';
 import 'package:fabrics_app/Components/card_roll.dart';
 import 'package:fabrics_app/Components/combo_colores.dart';
@@ -13,6 +5,7 @@ import 'package:fabrics_app/Components/combo_products.dart';
 import 'package:fabrics_app/Components/default_button.dart';
 import 'package:fabrics_app/Components/loader_component.dart';
 import 'package:fabrics_app/Components/scan_bar_code.dart';
+import 'package:fabrics_app/Components/scan_screen.dart';
 import 'package:fabrics_app/Components/text_derecha.dart';
 import 'package:fabrics_app/Components/text_encabezado.dart';
 import 'package:fabrics_app/Helpers/api_helper.dart';
@@ -23,6 +16,11 @@ import 'package:fabrics_app/Models/user.dart';
 import 'package:fabrics_app/Screens/home_screen.dart';
 import 'package:fabrics_app/constans.dart';
 import 'package:fabrics_app/sizeconfig.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 
 class ConsultaProductoScreen extends StatefulWidget {
   const ConsultaProductoScreen({super.key, required this.user});

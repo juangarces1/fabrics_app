@@ -1,3 +1,4 @@
+import 'package:fabrics_app/Screens/Productos/new_prod_search.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:fabrics_app/Components/app_bar_home.dart';
@@ -162,7 +163,7 @@ List<Menu> menus = [];
        Navigator.push(
         context,       
         MaterialPageRoute(
-          builder: (context) =>  AddNewProductScreen(user: widget.user,)
+          builder: (context) => AddNewProductScreen(user: widget.user,)
         )
       );
       return;
@@ -171,7 +172,7 @@ List<Menu> menus = [];
        Navigator.push(
         context,       
         MaterialPageRoute(
-          builder: (context) =>   ConsultaProductoScreen(user: widget.user,)
+          builder: (context) => NewProdSearch(user: widget.user,)
         )
       );
       return;

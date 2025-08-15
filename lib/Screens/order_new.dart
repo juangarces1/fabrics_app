@@ -1,5 +1,3 @@
-
-
 import 'package:adaptive_dialog/adaptive_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -19,7 +17,6 @@ import 'package:fabrics_app/Screens/add_product_screen.dart';
 import 'package:fabrics_app/Screens/home_screen.dart';
 import 'package:fabrics_app/constans.dart';
 import 'package:fabrics_app/sizeconfig.dart';
-
 
 class OrderNewScreen extends StatefulWidget {
   const OrderNewScreen({super.key, required this.orden, required this.user, required this.isOld });
