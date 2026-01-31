@@ -19,7 +19,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 version: 1.0.0+1
 
 environment:
-  sdk: ^3.5.3
+  sdk: ^3.8.1
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
@@ -38,18 +38,19 @@ dependencies:
   shared_preferences: ^2.0.8
   google_fonts: ^6.1.0
   flutter_spinkit: ^5.1.0
-  http: ^1.1.2
-  mobile_scanner: ^5.2.3
-  intl: ^0.19.0
+  http: ^1.1.2 
+  mobile_scanner: ^5.2.3 
+  intl: 0.20.1
   fluttericon: ^2.0.0
   adaptive_dialog: ^2.0.0
   flutter_svg: ^2.0.9
-  fluttertoast: ^8.0.9
+  fluttertoast: ^8.2.12
   flutter_native_splash: ^2.2.16
   flutter_launcher_icons: ^0.13.1
   horizontal_data_table: ^4.1.4
   find_dropdown: ^1.0.0
   ping_discover_network_forked: ^0.0.1
+  provider: ^6.1.5+1
 
 flutter_icons:
   android: "launcher_icon"

@@ -9,15 +9,15 @@ import 'package:fabrics_app/Components/scan_screen.dart';
 import 'package:fabrics_app/Components/text_derecha.dart';
 import 'package:fabrics_app/Components/text_encabezado.dart';
 import 'package:fabrics_app/Helpers/api_helper.dart';
+import 'package:fabrics_app/Helpers/scanner_helper.dart';
 import 'package:fabrics_app/Models/descuento.dart';
 import 'package:fabrics_app/Models/product.dart';
 import 'package:fabrics_app/Models/response.dart';
 import 'package:fabrics_app/Models/user.dart';
-import 'package:fabrics_app/Screens/home_screen.dart';
+import 'package:fabrics_app/Screens/home_screen_modern.dart';
+import 'package:fabrics_app/Components/custom_appbar_scan.dart';
 import 'package:fabrics_app/constans.dart';
-import 'package:fabrics_app/sizeconfig.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
@@ -33,145 +33,129 @@ class _ConsultaProductoScreenState extends State<ConsultaProductoScreen> {
   String? scanResult;
   TextEditingController codigoController = TextEditingController();
   String codigoError = '';
-  bool codigoShowError = false; 
+  bool codigoShowError = false;
 
   TextEditingController codProController = TextEditingController();
   String codProError = '';
-  bool codProShowError = false; 
+  bool codProShowError = false;
 
-  bool showLoader=false;
-  Product product=Product();
-  List<Descuento> movs=[];
+  bool showLoader = false;
+  Product product = Product();
+  List<Descuento> movs = [];
 
-  bool swicht =true;
+  bool swicht = true;
 
   List<Product> products = [];
   List<Product> colores = [];
 
   Product auxProduct = Product();
   Product auxColor = Product();
-  
- @override
+
+  @override
   void initState() {
-    super.initState();   
-    _getProducts(); 
+    super.initState();
+    _getProducts();
   }
- 
- @override 
- Widget build(BuildContext context) {
-    return  SafeArea(
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
       child: Scaffold(
         backgroundColor: kContrastColorMedium,
-        appBar: PreferredSize(
-              preferredSize: const Size.fromHeight(70),
-              child:  Container(
-                height: 70,
-                decoration:  const BoxDecoration(
-                  gradient: kGradientHome,),
-                child: Padding(
-                  padding: const EdgeInsets.only(left: 10, right: 10),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      SizedBox(
-                        height: getProportionateScreenHeight(40),
-                        width: getProportionateScreenWidth(40),
-                        child: TextButton(
-                          style: TextButton.styleFrom(
-                            foregroundColor: kPrimaryColor, shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            backgroundColor:  Colors.white,
-                            padding: EdgeInsets.zero,
-                          ),
-                          onPressed: goBack,             
-                                                    
-                          child: SvgPicture.asset(
-                            "assets/Back ICon.svg",
-                            height: 15,
-                            color: kPrimaryColor,
-                          ),
-                        ),
-                      ),
-                    
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.5),
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        child: Text('Consulta Producto', style:  GoogleFonts.oswald(fontStyle: FontStyle.normal, fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),),
-                      ),
-                       IconButton(             
-                        icon: swicht == false  ? const Icon(Icons.switch_right, color: Colors.white, size: 35,): const Icon(Icons.switch_left, color: Colors.white, size: 35,),
-                        onPressed: () => setState(() {
-                          swicht=!swicht;
-                        }),
-                                           ),
-                    ],
-                  ),
-                ),
-              ),
+        appBar: CustomAppBarScan(
+          press: goBack,
+          titulo: Text(
+            'Consulta Producto',
+            style: GoogleFonts.oswald(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
             ),
-        body:  swicht ? formProduct() :   _showProductResult()
-        )
+          ),
+          actions: [
+            IconButton(
+              icon: Icon(
+                swicht == false ? Icons.switch_right : Icons.switch_left,
+                color: Colors.white,
+                size: 30,
+              ),
+              onPressed: () => setState(() {
+                swicht = !swicht;
+              }),
+            ),
+          ],
+        ),
+        body: swicht ? formProduct() : _showProductResult(context),
+      ),
     );
   }
 
-  
-
- Widget formProduct(){
+  Widget formProduct() {
     return Stack(
-          children: [
-            Container(
-              color: kContrastColor,
-              child: SafeArea(
-              child: SingleChildScrollView(
-                child: Column(
-                  children:  [ 
-                     ScanBarCode(press: scanBarCode,),            
-                    Container(                    
-                      color: kColorAlternativo,
-                      child: _showCodigo()),  
-                       Container(                    
-                      color: kColorAlternativo,
-                      child: _showCodigoProducto()),     
-                     Container(height: 15, color: kContrastColor,),
-                     Padding(
-                       padding: const EdgeInsets.all(10.0),
-                       child: Container(
-                        color: kContrastColor,
-                        child: Card(
-                          color:Colors.white,
-                          shadowColor: kPrimaryColor,
-                          elevation: 8,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                          child: Column(children: [
-                             ComboProducts(onChanged: _goChange, backgroundColor: Colors.white, products: products, titulo: 'Productos'),          
-                             ComboColores(onChanged: _goChangeColor, backgroundColor: Colors.white, products: colores, titulo: 'Color'),
-                                const SizedBox(height: 10,),
-                             DefaultButton(text: 'Buscar', press:  goBuscarSelect,) ,
-                             const SizedBox(height: 20,)
-                          ]),
-                        ),
-                       ),
-                     ),  
-                   ],
+      children: [
+        Container(
+          color: kContrastColor,
+          child: SafeArea(
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  ScanBarCode(press: scanBarCode),
+                  Container(color: kColorAlternativo, child: _showCodigo()),
+                  Container(
+                    color: kColorAlternativo,
+                    child: _showCodigoProducto(),
                   ),
-                 ),
+                  Container(height: 15, color: kContrastColor),
+                  Padding(
+                    padding: const EdgeInsets.all(10.0),
+                    child: Container(
+                      color: kContrastColor,
+                      child: Card(
+                        color: Colors.white,
+                        shadowColor: kPrimaryColor,
+                        elevation: 8,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Column(
+                          children: [
+                            ComboProducts(
+                              onChanged: _goChange,
+                              backgroundColor: Colors.white,
+                              products: products,
+                              titulo: 'Productos',
+                            ),
+                            ComboColores(
+                              onChanged: _goChangeColor,
+                              backgroundColor: Colors.white,
+                              products: colores,
+                              titulo: 'Color',
+                            ),
+                            const SizedBox(height: 10),
+                            DefaultButton(
+                              text: 'Buscar',
+                              press: goBuscarSelect,
+                            ),
+                            const SizedBox(height: 20),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-            showLoader ? const LoaderComponent(text: 'Cargando') : Container(),
-          ],
-        );
+          ),
+        ),
+        showLoader ? const LoaderComponent(text: 'Cargando') : Container(),
+      ],
+    );
   }
 
- Future<void> _getProducts() async {
-   setState(() {
-      
+  Future<void> _getProducts() async {
+    setState(() {
       showLoader = true;
-    });   
+    });
 
     Response response = await ApiHelper.getProducts();
 
@@ -180,37 +164,36 @@ class _ConsultaProductoScreenState extends State<ConsultaProductoScreen> {
     });
 
     if (!response.isSuccess) {
-      await  Fluttertoast.showToast(
-          msg: 'Error: ${response.message}',
-          toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.TOP,
-          timeInSecForIosWeb: 1,
-          backgroundColor: Colors.red,
-          textColor: Colors.white,
-          fontSize: 16.0
-      );     
+      await Fluttertoast.showToast(
+        msg: 'Error: ${response.message}',
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.TOP,
+        timeInSecForIosWeb: 1,
+        backgroundColor: Colors.red,
+        textColor: Colors.white,
+        fontSize: 16.0,
+      );
       return;
     }
-   
-      setState(() {
-        products = response.result;       
-      });
-  } 
 
- Future<void> _getColors() async {
-    if(auxProduct.descripcion==null){
+    setState(() {
+      products = response.result;
+    });
+  }
+
+  Future<void> _getColors() async {
+    if (auxProduct.descripcion == null) {
       return;
     }
-    
+
     setState(() {
       colores.clear();
-      showLoader = true;     
-    }); 
+      showLoader = true;
+    });
 
-    Map<String, dynamic> request = 
-    {
+    Map<String, dynamic> request = {
       'supId': 1,
-      'descripcion' : auxProduct.descripcion, 
+      'descripcion': auxProduct.descripcion,
     };
 
     Response response = await ApiHelper.getProductColors(request);
@@ -220,271 +203,240 @@ class _ConsultaProductoScreenState extends State<ConsultaProductoScreen> {
     });
 
     if (!response.isSuccess) {
-      await  Fluttertoast.showToast(
-          msg: 'Error: ${response.message}',
-          toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.TOP,
-          timeInSecForIosWeb: 1,
-          backgroundColor: Colors.red,
-          textColor: Colors.white,
-          fontSize: 16.0
-      );     
+      await Fluttertoast.showToast(
+        msg: 'Error: ${response.message}',
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.TOP,
+        timeInSecForIosWeb: 1,
+        backgroundColor: Colors.red,
+        textColor: Colors.white,
+        fontSize: 16.0,
+      );
       return;
     }
-   
+
     setState(() {
-      colores = response.result;       
+      colores = response.result;
     });
-  } 
+  }
 
- Widget _showProductResult(){
-  return SafeArea(
-    child:  SingleChildScrollView(
-      child: Column(
-        children: [
-          product.descripcion != null ?  _showInfo() : Container(),              
-                 
-          product.rolls != null  ? _showListRolls(): Container(),
-
-       
-                 
-           movs.isEmpty ? Container() : _showListMovs(),
-        ],
-      ) 
-    ),
-  );
- } 
-
- Widget _showListRolls() {
-  return  Container(
-    color: kColorAlternativo,
-      child: Column( 
-        children: [
-        const SizedBox(height: 10,),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: getProportionateScreenWidth(10)),
-            child: Center(
-              child: Text('Rollos', style: GoogleFonts.oswald(
-              fontStyle: FontStyle.normal,
-               fontSize: 17,
-                fontWeight: FontWeight.w500,
-                 color: Colors.white)),
-            ),
-          ),
-        const Divider(
-            height: 10,
-            thickness: 2,
-            color: kContrastColor,
-          ), 
-          
-          SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            children: 
-            [
-              ...List.generate(
-              product.rolls!.length,
-                (index) {      
-                    return CardRoll(roll: product.rolls![index],);          
-                },
-              ),
-              SizedBox(width: getProportionateScreenWidth(20)),
-            ],
-          ),
-          ),
-            const Divider(
-          height: 10,
-          thickness: 2,
-          color: kContrastColor,
-          ), 
-        ],
-      ),
-    );
-  } 
-
- Widget _showListMovs() {
-  return Column(
-    children: [
-      Container(
-         color: kColorAlternativo,
-        child: Center(
-          child: Text('Movimientos', style: GoogleFonts.oswald(
-          fontStyle: FontStyle.normal,
-           fontSize: 17,
-            fontWeight: FontWeight.w500,
-             color: Colors.white)),
+  Widget _showProductResult(BuildContext context) {
+    return SafeArea(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (product.descripcion != null) _showInfo(context),
+            if ((product.rolls?.isNotEmpty ?? false)) _showListRolls(context),
+            if (movs.isNotEmpty) _showListMovs(context),
+          ],
         ),
       ),
-      Container( height: 150,
-        color: kColorAlternativo,
-        child: Padding(
-          padding: const EdgeInsets.all(8),
-          child: ListWheelScrollView.useDelegate(  
-            perspective: 0.005,        
-            itemExtent: 80,
-            physics: const FixedExtentScrollPhysics(),
-            childDelegate: ListWheelChildBuilderDelegate(
-              builder: (context, index) {
-                return CardMovimiento(descuento: movs[index]);
-              },
-              childCount:  movs.length,
-            ),
-          ),
-        ),
-      ),
-    ],
-  );
- }  
-
- Widget _showInfo() {     
-  return Container(
-      decoration:  const
-      BoxDecoration(
-        color: kContrastColorMedium,             
-      ),
-        child: Padding(
-          padding:  const EdgeInsets.only(left: 20.0, right: 20, top:10, bottom: 10),  
-          child: Card(
-                color:Colors.white70,
-                shadowColor: kPrimaryColor,
-                elevation: 8,
-            child: Padding(
-              padding:  const EdgeInsets.all(8),
-              child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-            
-                children: [
-                  Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const TextEncabezado(texto: 'Producto: '),
-                      TextDerecha(texto: product.descripcion!)
-                    ],
-                  ),
-                  
-                  Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const TextEncabezado(texto:'Color: '),
-                      TextDerecha(texto:product.color!),
-                    ]
-                  ),                          
-                  
-                  Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const TextEncabezado(texto:'Stock: '),
-                      TextDerecha(texto:product.stock.toString()),
-                      const SizedBox(width: 10,),
-                        const TextEncabezado(texto:'Stock Bodega: '),
-                      TextDerecha(texto:product.stockEnBodega.toString()),
-                                              
-                    
-                  ],),
-                  
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                        const TextEncabezado(texto:'Stock Almacen: '),
-                      TextDerecha(texto:product.stockEnAlmacen.toString()),
-                        const SizedBox(width: 10,),
-                        const TextEncabezado(texto:'Unidad: '),
-                      TextDerecha(texto:product.medida!),                         
-                    
-                    
-                  ],),
-                    
-                    Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [    
-                        const TextEncabezado(texto:'Rollos: '),
-                      TextDerecha(texto:product.rolls!.length.toString()),
-                        const SizedBox(width: 10,),
-                      const TextEncabezado(texto:'Ultima Entrada: '),
-                      TextDerecha(texto:product.ultimaEntrada!),                           
-                    
-                  ],),
-                    Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [ 
-                      const TextEncabezado(texto:'Total Entradas: '),
-                      TextDerecha(texto:product.totalEntradas.toString()),   
-                        const SizedBox(width: 10,),                      
-                    const TextEncabezado(texto:'Total Salidas: '),
-                      TextDerecha(texto:product.totalSalidas.toString()),  
-                    ],),
-                      Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [ 
-                      const TextEncabezado(texto:'Prom Compra: '),
-                      TextDerecha(texto:NumberFormat("##.0#", "en_US").format(product.precioPromedio)),   
-                        const SizedBox(width: 10,),                      
-                         const TextEncabezado(texto:'Ult Compra: '),
-                       TextDerecha(texto: NumberFormat("##.0#", "en_US").format(product.ultimoPrecio)),  
-                    ],),
-                        Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [ 
-                      const TextEncabezado(texto:' Prom Venta: '),
-                      TextDerecha(texto:product.promVenta!),   
-                        const SizedBox(width: 10,),                      
-                         const TextEncabezado(texto:'Ult Venta: '),
-                       TextDerecha(texto: product.ultimaVenta!),  
-                    ],),
-                  ]),
-          ),
-          ),
-        ),
     );
   }
 
- Widget _showCodigo() {
+  Widget _showListRolls(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      margin: const EdgeInsets.only(top: 12),
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerHighest.withOpacity(.25),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white10),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const _SectionHeader(title: 'Rollos'),
+          SizedBox(
+            height: 160,
+            child: ListView.separated(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              scrollDirection: Axis.horizontal,
+              itemBuilder: (_, i) => CardRoll(roll: product.rolls![i]),
+              separatorBuilder: (_, __) => const SizedBox(width: 12),
+              itemCount: product.rolls!.length,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _showListMovs(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      margin: const EdgeInsets.only(top: 12),
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerHighest.withOpacity(.25),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white10),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const _SectionHeader(title: 'Movimientos'),
+          Container(
+            height: 180,
+            padding: const EdgeInsets.all(10),
+            child: ListWheelScrollView.useDelegate(
+              perspective: 0.0025,
+              itemExtent: 86,
+              physics: const FixedExtentScrollPhysics(),
+              childDelegate: ListWheelChildBuilderDelegate(
+                builder: (_, i) => CardMovimiento(descuento: movs[i]),
+                childCount: movs.length,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _showInfo(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final textPrimary = cs.onSurface;
+    final n = NumberFormat("##.0#", "en_US");
+
+    return Container(
+      decoration: BoxDecoration(
+        color: cs.surface.withOpacity(.6),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(.35),
+            blurRadius: 18,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            product.descripcion!,
+            textAlign: TextAlign.center,
+            style: GoogleFonts.oswald(
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+              color: textPrimary,
+              letterSpacing: .5,
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Divider(height: 16, thickness: 1, color: Colors.white12),
+          const SizedBox(height: 6),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _InfoChip(label: 'Color', value: product.color ?? '-'),
+              _InfoChip(label: 'Unidad', value: product.medida ?? '-'),
+              _InfoChip(
+                label: 'Rollos',
+                value: '${product.rolls?.length ?? 0}',
+              ),
+              _InfoChip(label: 'Stock', value: '${product.stock ?? 0}'),
+              _InfoChip(
+                label: 'Bodega',
+                value: '${product.stockEnBodega ?? 0}',
+              ),
+              _InfoChip(
+                label: 'Almacén',
+                value: '${product.stockEnAlmacen ?? 0}',
+              ),
+              _InfoChip(
+                label: 'Últ. Entrada',
+                value: product.ultimaEntrada ?? '-',
+              ),
+              _InfoChip(
+                label: 'Tot. Entradas',
+                value: '${product.totalEntradas ?? 0}',
+              ),
+              _InfoChip(
+                label: 'Tot. Salidas',
+                value: '${product.totalSalidas ?? 0}',
+              ),
+              _InfoChip(
+                label: 'Prom. Compra',
+                value: n.format(product.precioPromedio ?? 0),
+              ),
+              _InfoChip(
+                label: 'Últ. Compra',
+                value: n.format(product.ultimoPrecio ?? 0),
+              ),
+              _InfoChip(label: 'Prom. Venta', value: product.promVenta ?? '-'),
+              _InfoChip(label: 'Últ. Venta', value: product.ultimaVenta ?? '-'),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _showCodigo() {
     return Container(
       color: kContrastColor,
-      padding: const EdgeInsets.only(left: 50.0, right: 50, top:20),      
+      padding: const EdgeInsets.only(left: 50.0, right: 50, top: 20),
       child: TextField(
         controller: codigoController,
         keyboardType: TextInputType.number,
         decoration: InputDecoration(
-          
           filled: true,
           hoverColor: const Color.fromARGB(255, 19, 47, 70),
-          border:   const OutlineInputBorder(borderSide: BorderSide(color: kPrimaryColor, width: 5)),
+          border: const OutlineInputBorder(
+            borderSide: BorderSide(color: kPrimaryColor, width: 5),
+          ),
           hintText: 'Ingresa el codigo...',
           labelText: 'Codigo Rollo',
           errorText: codigoShowError ? codigoError : null,
-          suffixIcon: IconButton(iconSize: 40, onPressed:  goGetProduct, icon: const Icon(Icons.search_sharp, color: Color.fromARGB(255, 35, 145, 39),),)
-         
+          suffixIcon: IconButton(
+            iconSize: 40,
+            onPressed: goGetProduct,
+            icon: const Icon(
+              Icons.search_sharp,
+              color: Color.fromARGB(255, 35, 145, 39),
+            ),
+          ),
         ),
-    
       ),
     );
   }
 
- Widget _showCodigoProducto() {
+  Widget _showCodigoProducto() {
     return Container(
       color: kContrastColor,
-      padding: const EdgeInsets.only(left: 50.0, right: 50, top:20),      
+      padding: const EdgeInsets.only(left: 50.0, right: 50, top: 20),
       child: TextField(
         controller: codProController,
         keyboardType: TextInputType.number,
         decoration: InputDecoration(
-          
           filled: true,
           hoverColor: const Color.fromARGB(255, 19, 47, 70),
-          border:   const OutlineInputBorder(borderSide: BorderSide(color: kPrimaryColor, width: 5)),
+          border: const OutlineInputBorder(
+            borderSide: BorderSide(color: kPrimaryColor, width: 5),
+          ),
           hintText: 'Ingresa el codigo...',
           labelText: 'Codigo Producto',
           errorText: codProShowError ? codProError : null,
-          suffixIcon: IconButton(iconSize: 40, onPressed: goProductByID, icon: const Icon(Icons.search_sharp, color: Color.fromARGB(255, 35, 145, 39),),)
-         
+          suffixIcon: IconButton(
+            iconSize: 40,
+            onPressed: goProductByID,
+            icon: const Icon(
+              Icons.search_sharp,
+              color: Color.fromARGB(255, 35, 145, 39),
+            ),
+          ),
         ),
-    
       ),
     );
   }
 
- bool _validateCodigo() {
+  bool _validateCodigo() {
     bool isValid = true;
 
     if (codigoController.text.isEmpty) {
@@ -493,21 +445,21 @@ class _ConsultaProductoScreenState extends State<ConsultaProductoScreen> {
       codigoError = 'Digite el Codigo.';
     } else {
       codigoShowError = false;
-    }   
-    
-    if(int.tryParse(codigoController.text) == null){
-        isValid = false;
-        codigoShowError = true;
-        codigoError = 'Debes ingresar un numero correcto.';
+    }
+
+    if (int.tryParse(codigoController.text) == null) {
+      isValid = false;
+      codigoShowError = true;
+      codigoError = 'Debes ingresar un numero correcto.';
     } else {
       codigoShowError = false;
     }
- 
+
     setState(() {});
     return isValid;
   }
 
- void goGetProduct() {
+  void goGetProduct() {
     FocusScopeNode currentFocus = FocusScope.of(context);
     if (!currentFocus.hasPrimaryFocus) {
       currentFocus.unfocus();
@@ -516,215 +468,290 @@ class _ConsultaProductoScreenState extends State<ConsultaProductoScreen> {
       return;
     }
     int code22 = int.parse(codigoController.text);
-     _getProduct(code22);
+    _getProduct(code22);
   }
 
- Future scanBarCode() async {
-   final result = await Navigator.push(
-    context,
-    MaterialPageRoute(builder: (context) => const ScanScreen()),
-  );
-   if (result != null) {
-    setState(() {
-      scanResult = result;
-    });    }
+  Future scanBarCode() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const ScanScreen()),
+    );
+    if (result != null) {
+      setState(() {
+        scanResult = result;
+      });
+    }
     _getProductScan();
   }
-  
- Future _getProduct(int code) async {
+
+  Future _getProduct(int code) async {
     setState(() {
-        showLoader=true;
-    }); 
-   
+      showLoader = true;
+    });
+
     Response response = await ApiHelper.getProductByRoll(code);
 
     setState(() {
-        showLoader=false;
+      showLoader = false;
     });
-  
+
     if (!response.isSuccess) {
-      await  Fluttertoast.showToast(
-          msg: 'Error: ${response.message}',
-          toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.TOP,
-          timeInSecForIosWeb: 1,
-          backgroundColor: Colors.red,
-          textColor: Colors.white,
-          fontSize: 16.0
-      );     
+      await Fluttertoast.showToast(
+        msg: 'Error: ${response.message}',
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.TOP,
+        timeInSecForIosWeb: 1,
+        backgroundColor: Colors.red,
+        textColor: Colors.white,
+        fontSize: 16.0,
+      );
       return;
-    }    
-     
+    }
+
     setState(() {
-      product = response.result;     
+      product = response.result;
     });
 
     List<Descuento> descAux = [];
     for (var v in product.rolls!) {
-      descAux.addAll(v.descuentos!);   
+      descAux.addAll(v.descuentos!);
     }
 
     setState(() {
-      movs=descAux;
+      movs = descAux;
       swicht = false;
     });
   }
 
- Future _getProductScan() async {
-    
-    var cides=scanResult??'';
-      if(cides.isEmpty){
-       return;
-     }
-      if(cides=='-1'){
-       return;
-     }   
-
-      setState(() {
-          showLoader=true;
-      });
-  
-     String code1 = cides.substring(1,9);
-     int code = int.parse(code1);
-     Response response = await ApiHelper.getProductByRoll(code);
+  Future _getProductScan() async {
+    var cides = scanResult ?? '';
+    if (cides.isEmpty) {
+      return;
+    }
+    if (cides == '-1') {
+      return;
+    }
 
     setState(() {
-        showLoader=false;
+      showLoader = true;
     });
-  
-     if (!response.isSuccess) {
-      await  Fluttertoast.showToast(
-          msg: 'Error: ${response.message}',
-          toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.TOP,
-          timeInSecForIosWeb: 1,
-          backgroundColor: Colors.red,
-          textColor: Colors.white,
-          fontSize: 16.0
-      );     
+
+    int? code = ScannerHelper.extractRollId(cides);
+    if (code == null) {
+      await Fluttertoast.showToast(msg: 'Código inválido');
       return;
-    }    
+    }
+    Response response = await ApiHelper.getProductByRoll(code);
+
+    setState(() {
+      showLoader = false;
+    });
+
+    if (!response.isSuccess) {
+      await Fluttertoast.showToast(
+        msg: 'Error: ${response.message}',
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.TOP,
+        timeInSecForIosWeb: 1,
+        backgroundColor: Colors.red,
+        textColor: Colors.white,
+        fontSize: 16.0,
+      );
+      return;
+    }
 
     setState(() {
       product = response.result;
-      codigoController.text=code.toString();
+      codigoController.text = code.toString();
       swicht = false;
     });
   }
 
- goBack() async {
-        Navigator.push(
-          context,  
-        MaterialPageRoute(
-          builder: (context) => HomeScreen(user: widget.user,)
-      ));  
+  goBack() async {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => HomeScreenModern(user: widget.user),
+      ),
+    );
   }
-  
- refrescar() {
+
+  refrescar() {
     setState(() {
-      swicht =true;
+      swicht = true;
     });
   }
 
- void _goChange(selectedItem) {
-    setState(() {            
-       auxProduct = selectedItem;
+  void _goChange(selectedItem) {
+    setState(() {
+      auxProduct = selectedItem;
     });
     _getColors();
   }
 
- void _goChangeColor(selectedItem)  {
-     setState(() { 
-      auxColor=selectedItem;
+  void _goChangeColor(selectedItem) {
+    setState(() {
+      auxColor = selectedItem;
     });
-  }   
- 
- Future goProductByID() async {
-    if(codProController.text.isEmpty){
-      await Fluttertoast.showToast(
-          msg: "Digite el codigo del producto",
-          toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.TOP,
-          timeInSecForIosWeb: 1,
-          backgroundColor: const Color.fromARGB(255, 48, 168, 84),
-          textColor: Colors.white,
-          fontSize: 16.0
-      );     
-      return;
-    }
-
-     if(int.tryParse(codProController.text) == null){
-       await Fluttertoast.showToast(
-          msg: "Digite un numero valido",
-          toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.TOP,
-          timeInSecForIosWeb: 1,
-          backgroundColor: const Color.fromARGB(255, 48, 168, 84),
-          textColor: Colors.white,
-          fontSize: 16.0
-      );     
-      return;
-    }
-
-    int cod= int.parse(codProController.text);
-
-     _getProductById(cod);
-
   }
 
- Future  goBuscarSelect() async {
-    if(auxColor.descripcion==null){
+  Future goProductByID() async {
+    if (codProController.text.isEmpty) {
       await Fluttertoast.showToast(
-          msg: "Seleccione un Producto y/o Color",
-          toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.TOP,
-          timeInSecForIosWeb: 1,
-          backgroundColor: const Color.fromARGB(255, 48, 168, 84),
-          textColor: Colors.white,
-          fontSize: 16.0
-      );     
+        msg: "Digite el codigo del producto",
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.TOP,
+        timeInSecForIosWeb: 1,
+        backgroundColor: const Color.fromARGB(255, 48, 168, 84),
+        textColor: Colors.white,
+        fontSize: 16.0,
+      );
       return;
     }
-      _getProductById(auxColor.id!);
+
+    if (int.tryParse(codProController.text) == null) {
+      await Fluttertoast.showToast(
+        msg: "Digite un numero valido",
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.TOP,
+        timeInSecForIosWeb: 1,
+        backgroundColor: const Color.fromARGB(255, 48, 168, 84),
+        textColor: Colors.white,
+        fontSize: 16.0,
+      );
+      return;
+    }
+
+    int cod = int.parse(codProController.text);
+
+    _getProductById(cod);
   }
-  
- Future _getProductById(int code) async {
-     setState(() {
-        showLoader=true;
-    }); 
-    
-   
-    Response response = await ApiHelper.
-    getPRoductById(code);
+
+  Future goBuscarSelect() async {
+    if (auxColor.descripcion == null) {
+      await Fluttertoast.showToast(
+        msg: "Seleccione un Producto y/o Color",
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.TOP,
+        timeInSecForIosWeb: 1,
+        backgroundColor: const Color.fromARGB(255, 48, 168, 84),
+        textColor: Colors.white,
+        fontSize: 16.0,
+      );
+      return;
+    }
+    _getProductById(auxColor.id!);
+  }
+
+  Future _getProductById(int code) async {
+    setState(() {
+      showLoader = true;
+    });
+
+    Response response = await ApiHelper.getPRoductById(code);
 
     setState(() {
-        showLoader=false;
+      showLoader = false;
     });
-  
+
     if (!response.isSuccess) {
-      await  Fluttertoast.showToast(
-          msg: 'Error: ${response.message}',
-          toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.TOP,
-          timeInSecForIosWeb: 1,
-          backgroundColor: Colors.red,
-          textColor: Colors.white,
-          fontSize: 16.0
-      );     
+      await Fluttertoast.showToast(
+        msg: 'Error: ${response.message}',
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.TOP,
+        timeInSecForIosWeb: 1,
+        backgroundColor: Colors.red,
+        textColor: Colors.white,
+        fontSize: 16.0,
+      );
       return;
-    }    
-     
+    }
+
     Product aux = response.result;
 
     List<Descuento> descAux = [];
     for (var v in aux.rolls!) {
-      descAux.addAll(v.descuentos!);   
+      descAux.addAll(v.descuentos!);
     }
 
     setState(() {
-      movs=descAux;
+      movs = descAux;
       swicht = false;
-       product = response.result; 
+      product = response.result;
     });
+  }
+}
+
+class _SectionHeader extends StatelessWidget {
+  final String title;
+  const _SectionHeader({required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 10),
+      decoration: BoxDecoration(
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [cs.primary.withOpacity(.20), cs.secondary.withOpacity(.10)],
+        ),
+      ),
+      child: Center(
+        child: Text(
+          title,
+          style: GoogleFonts.oswald(
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+            color: cs.onSurface,
+            letterSpacing: .4,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _InfoChip extends StatelessWidget {
+  final String label;
+  final String value;
+  const _InfoChip({required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerHighest.withOpacity(.35),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white12),
+      ),
+      child: RichText(
+        text: TextSpan(
+          children: [
+            TextSpan(
+              text: '$label: ',
+              style: GoogleFonts.robotoMono(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: cs.onSurface.withOpacity(.9),
+              ),
+            ),
+            TextSpan(
+              text: value,
+              style: GoogleFonts.robotoMono(
+                fontSize: 12,
+                fontWeight: FontWeight.w400,
+                color: cs.onSurface.withOpacity(.85),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

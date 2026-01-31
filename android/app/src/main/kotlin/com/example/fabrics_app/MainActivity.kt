@@ -1,5 +1,5 @@
-package com.example.fabrics_app
+package com.fabricsapp
 
 import io.flutter.embedding.android.FlutterActivity
 
-class MainActivity: FlutterActivity()
+class MainActivity : FlutterActivity()

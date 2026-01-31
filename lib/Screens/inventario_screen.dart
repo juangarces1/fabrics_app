@@ -17,7 +17,7 @@ import 'package:fabrics_app/Models/inventario.dart';
 import 'package:fabrics_app/Models/product.dart';
 import 'package:fabrics_app/Models/response.dart';
 import 'package:fabrics_app/Models/user.dart';
-import 'package:fabrics_app/Screens/home_screen.dart';
+import 'package:fabrics_app/Screens/home_screen_modern.dart';
 import 'package:fabrics_app/constans.dart';
 
 class InventarioScreen extends StatefulWidget {
@@ -38,173 +38,195 @@ class _InventarioScreenState extends State<InventarioScreen> {
 
   @override
   void initState() {
-    super.initState();   
-    _getProducts(); 
+    super.initState();
+    _getProducts();
     _getCategories();
   }
-      
- @override
- Widget build(BuildContext context) {
-    return SafeArea(child: 
-     Stack(
-      children: [
-        Scaffold(
-          appBar:  AppBar(
-            leading: const BackButton(color: Colors.white,),
-            backgroundColor: kPrimaryColor,
-            title:  Text( 'Inventario', style : GoogleFonts.oswald(fontStyle: FontStyle.normal, fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
-          actions: [
-            inventario.detalle.isNotEmpty ? IconButton(onPressed: () => refrescar(), icon: const Icon(Icons.filter_alt, size: 20, color: Colors.white,),)  : Container()
-          ],
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Stack(
+        children: [
+          Scaffold(
+            appBar: AppBar(
+              leading: const BackButton(color: Colors.white),
+              backgroundColor: kPrimaryColor,
+              title: Text(
+                'Inventario',
+                style: GoogleFonts.oswald(
+                  fontStyle: FontStyle.normal,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              actions: [
+                inventario.detalle.isNotEmpty
+                    ? IconButton(
+                        onPressed: () => refrescar(),
+                        icon: const Icon(
+                          Icons.filter_alt,
+                          size: 20,
+                          color: Colors.white,
+                        ),
+                      )
+                    : Container(),
+              ],
+            ),
+            body: inventario.detalle.isNotEmpty ? tablaInv() : formInv(),
+            bottomNavigationBar: BottomAppBar(
+              color: kContrastColorMedium,
+              height: 50,
+              child: SizedBox(
+                height: 50,
+                child: inventario.detalle.isNotEmpty
+                    ? Center(
+                        child: Row(
+                          mainAxisSize: MainAxisSize.max,
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: <Widget>[
+                            const SizedBox(width: 40),
+                            const TextEncabezado(texto: 'Total: '),
+                            TextDerecha(texto: inventario.total!),
+                            const SizedBox(width: 5),
+                            const TextEncabezado(texto: 'Mts: '),
+                            TextDerecha(texto: inventario.metros!),
+                            const SizedBox(width: 5),
+                            const TextEncabezado(texto: 'Kgs: '),
+                            TextDerecha(texto: inventario.kilos!),
+                            const SizedBox(width: 5),
+                            const TextEncabezado(texto: 'Rollos: '),
+                            TextDerecha(texto: inventario.rollos!),
+                          ],
+                        ),
+                      )
+                    : Container(),
+              ),
+            ),
           ),
-          body:  inventario.detalle.isNotEmpty ? tablaInv() : formInv(),
-          bottomNavigationBar: BottomAppBar(
-          color: kContrastColorMedium,
-           height: 50,
-          child: SizedBox(
-           height: 50,
-            child: inventario.detalle.isNotEmpty ? 
-             Center(
-               child: Row(
-                mainAxisSize: MainAxisSize.max,
-                mainAxisAlignment: MainAxisAlignment.start,
-                 children:  <Widget>[             
-                 const SizedBox(width: 40,),
-                 const TextEncabezado(texto: 'Total: '),
-                 TextDerecha(texto: inventario.total!),
-                 const SizedBox(width: 5,),
-                 const TextEncabezado(texto: 'Mts: '),
-                 TextDerecha(texto: inventario.metros!),
-                 const SizedBox(width: 5,),
-                 const TextEncabezado(texto: 'Kgs: '),
-                 TextDerecha(texto: inventario.kilos!),
-                 const SizedBox(width: 5,),
-                 const TextEncabezado(texto: 'Rollos: '),
-                 TextDerecha(texto: inventario.rollos!),
-               ],          
-             ),
-           ) : Container(),
-          ),
-         ), ),
-        showLoader ? const LoaderComponent(text: 'Cargando') : Container(),
-      ],
-     ));
+          showLoader ? const LoaderComponent(text: 'Cargando') : Container(),
+        ],
+      ),
+    );
   }
 
- Future<void> _getInventario(Map<String, dynamic> request) async {
-   setState(() {
-   
+  Future<void> _getInventario(Map<String, dynamic> request) async {
+    setState(() {
       showLoader = true;
-    });   
+    });
 
-     Response response = await ApiHelper.post(
-     'api/Kilos/GetInventario/', 
+    Response response = await ApiHelper.post(
+      'api/Kilos/GetInventario/',
       request,
-    );    
+    );
 
     setState(() {
       showLoader = false;
     });
 
-     if (!response.isSuccess) {
-     showErrorFromDialog(response.message);
+    if (!response.isSuccess) {
+      showErrorFromDialog(response.message);
       return;
-    } 
-   
-    var decodedJson = jsonDecode(response.result); 
-      setState(() {
-        inventario = Inventario.fromJson(decodedJson);   
-      });
     }
 
- Widget tablaInv() {
-    return HorizontalDataTable(
-        leftHandSideColumnWidth: 110,
-        rightHandSideColumnWidth: 560,
-        isFixedHeader: true,
-        headerWidgets: _getTitleWidget(),
-        leftSideItemBuilder: _generateFirstColumnRow,
-        rightSideItemBuilder: _generateRightHandSideColumnRow,
-        itemCount: inventario.detalle.length,
-        rowSeparatorWidget: const Divider(
-          color:kPrimaryColor,
-          height: 1.0,
-          thickness: 0.0,
-        ),
-        
-        leftHandSideColBackgroundColor: const Color(0xFFFFFFFF),
-        rightHandSideColBackgroundColor: const Color(0xFFFFFFFF),
-      );
+    var decodedJson = jsonDecode(response.result);
+    setState(() {
+      inventario = Inventario.fromJson(decodedJson);
+    });
   }
 
- Widget _generateRightHandSideColumnRow(BuildContext context, int index) {
+  Widget tablaInv() {
+    return HorizontalDataTable(
+      leftHandSideColumnWidth: 110,
+      rightHandSideColumnWidth: 560,
+      isFixedHeader: true,
+      headerWidgets: _getTitleWidget(),
+      leftSideItemBuilder: _generateFirstColumnRow,
+      rightSideItemBuilder: _generateRightHandSideColumnRow,
+      itemCount: inventario.detalle.length,
+      rowSeparatorWidget: const Divider(
+        color: kPrimaryColor,
+        height: 1.0,
+        thickness: 0.0,
+      ),
+
+      leftHandSideColBackgroundColor: const Color(0xFFFFFFFF),
+      rightHandSideColBackgroundColor: const Color(0xFFFFFFFF),
+    );
+  }
+
+  Widget _generateRightHandSideColumnRow(BuildContext context, int index) {
     return Row(
       children: <Widget>[
         Container(
-        width: 100,
-        height: 52,
-        padding: const EdgeInsets.fromLTRB(5, 0, 0, 0),
-        alignment: Alignment.centerLeft,      
-        child: Text(inventario.detalle[index].categoria!),
+          width: 100,
+          height: 52,
+          padding: const EdgeInsets.fromLTRB(5, 0, 0, 0),
+          alignment: Alignment.centerLeft,
+          child: Text(inventario.detalle[index].categoria!),
         ),
         Container(
-        width: 80,
-        height: 52,
-        padding: const EdgeInsets.fromLTRB(5, 0, 0, 0),
-        alignment: Alignment.centerLeft,
-        child: Text(inventario.detalle[index].medida!),
+          width: 80,
+          height: 52,
+          padding: const EdgeInsets.fromLTRB(5, 0, 0, 0),
+          alignment: Alignment.centerLeft,
+          child: Text(inventario.detalle[index].medida!),
         ),
         Container(
-        width: 70,
-        height: 52,
-        padding: const EdgeInsets.fromLTRB(5, 0, 0, 0),
-        alignment: Alignment.centerLeft,
-        child: Text(inventario.detalle[index].inventario!),
+          width: 70,
+          height: 52,
+          padding: const EdgeInsets.fromLTRB(5, 0, 0, 0),
+          alignment: Alignment.centerLeft,
+          child: Text(inventario.detalle[index].inventario!),
         ),
         Container(
-        width: 70,
-        height: 52,
-        padding: const EdgeInsets.fromLTRB(5, 0, 0, 0),
-        alignment: Alignment.centerLeft,
-        child: Text(inventario.detalle[index].invAlmacen!),
+          width: 70,
+          height: 52,
+          padding: const EdgeInsets.fromLTRB(5, 0, 0, 0),
+          alignment: Alignment.centerLeft,
+          child: Text(inventario.detalle[index].invAlmacen!),
         ),
         Container(
-        width: 70,
-        height: 52,
-        padding: const EdgeInsets.fromLTRB(5, 0, 0, 0),
-        alignment: Alignment.centerLeft,
-        child: Text(inventario.detalle[index].invBodega!),
+          width: 70,
+          height: 52,
+          padding: const EdgeInsets.fromLTRB(5, 0, 0, 0),
+          alignment: Alignment.centerLeft,
+          child: Text(inventario.detalle[index].invBodega!),
         ),
-         Container(
-        width: 70,
-        height: 52,
-        padding: const EdgeInsets.fromLTRB(5, 0, 0, 0),
-        alignment: Alignment.centerLeft,
-        child: Text(inventario.detalle[index].totalRollos!.toString()),
+        Container(
+          width: 70,
+          height: 52,
+          padding: const EdgeInsets.fromLTRB(5, 0, 0, 0),
+          alignment: Alignment.centerLeft,
+          child: Text(inventario.detalle[index].totalRollos!.toString()),
         ),
-         Container(
-        width: 100,
-        height: 52,
-        padding: const EdgeInsets.fromLTRB(5, 0, 0, 0),
-        alignment: Alignment.centerLeft,
-        child: Text(inventario.detalle[index].valor!),
+        Container(
+          width: 100,
+          height: 52,
+          padding: const EdgeInsets.fromLTRB(5, 0, 0, 0),
+          alignment: Alignment.centerLeft,
+          child: Text(inventario.detalle[index].valor!),
         ),
-      ]);
+      ],
+    );
   }
 
- Widget _generateFirstColumnRow(BuildContext context, int index) {
+  Widget _generateFirstColumnRow(BuildContext context, int index) {
     return Container(
       width: 110,
       height: 52,
       padding: const EdgeInsets.fromLTRB(5, 0, 0, 0),
       alignment: Alignment.centerLeft,
-      child: Text('${inventario.detalle[index].producto} ${inventario.detalle[index].color}'),
+      child: Text(
+        '${inventario.detalle[index].producto} ${inventario.detalle[index].color}',
+      ),
     );
   }
 
- List<Widget> _getTitleWidget() {
+  List<Widget> _getTitleWidget() {
     return [
-      _getTitleItemWidget('Producto', 110),      
+      _getTitleItemWidget('Producto', 110),
       _getTitleItemWidget('Categoria', 100),
       _getTitleItemWidget('Medida', 80),
       _getTitleItemWidget('Stock', 70),
@@ -212,11 +234,10 @@ class _InventarioScreenState extends State<InventarioScreen> {
       _getTitleItemWidget('Stock Bod', 70),
       _getTitleItemWidget('Rollos', 70),
       _getTitleItemWidget('Valor', 100),
-      
     ];
   }
 
- Widget _getTitleItemWidget(String label, double width) {
+  Widget _getTitleItemWidget(String label, double width) {
     return Container(
       color: kContrastColorMedium,
       width: width,
@@ -226,11 +247,11 @@ class _InventarioScreenState extends State<InventarioScreen> {
       child: Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
     );
   }
-   
- Future<void> _getProducts() async {
-   setState(() {     
+
+  Future<void> _getProducts() async {
+    setState(() {
       showLoader = true;
-    });   
+    });
 
     Response response = await ApiHelper.getProducts();
 
@@ -238,121 +259,148 @@ class _InventarioScreenState extends State<InventarioScreen> {
       showLoader = false;
     });
 
-     if (!response.isSuccess) {
-     showErrorFromDialog(response.message);
+    if (!response.isSuccess) {
+      showErrorFromDialog(response.message);
       return;
-    } 
-   
-      setState(() {
-        products = response.result;       
-      });
     }
-  
- goBack() async {
-      Navigator.push(
-        context,  
-       MaterialPageRoute(
-        builder: (context) => HomeScreen(user: widget.user,)
-    ));  
-  }
-  
- Widget formInv()  {
-    return Container(
-      color: kContrastColorMedium,
-      child: Center(
-        child: Column(children:  [
-      
-          Container(
-            color: kContrastColorMedium,
-            child: Padding(padding: const EdgeInsets.only(right: 10, left: 10, top: 10, bottom: 15),
-              child: Card(
-                  color:kContrastColor,
-                  shadowColor: kPrimaryColor,
-                  elevation: 8,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                  child: Column(children: [
-                    ComboProducts(onChanged: changeProduct, backgroundColor: kContrastColor, products: products, titulo: 'Productos'),
-                     const SizedBox(height: 5,),
-                    DefaultButton(text: 'Filtrar', press: () => getByProduct(),),
-                    const SizedBox(height: 20,),
-                  ]),
-              ),
-            ),
-          ),
 
-            Container(
-            color: kContrastColorMedium,
-            child: Padding(padding: const EdgeInsets.only(right: 10, left: 10, bottom: 15),
-              child: Card(
-                  color:kContrastColor,
-                  shadowColor: kPrimaryColor,
-                  elevation: 8,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                  child: Column(children: [
-                     ComboCategorias(onChanged: changeCategoria, backgroundColor: kContrastColor, categories: categories, titulo: 'Categorias'),
-                      const SizedBox(height: 5,),
-                     DefaultButton(text: 'Filtrar', press: () => getByCategoria(),),
-                    const SizedBox(height: 20,),
-                  ]),
-              ),
-            ),
-          ),          
-          
-          const SizedBox(height: 10,),
-           DefaultButton(text: 'Todo', press: () => goAll(),),
-          const SizedBox(height: 10,),        
-         
-        ]),
+    setState(() {
+      products = response.result;
+    });
+  }
+
+  goBack() async {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => HomeScreenModern(user: widget.user),
       ),
     );
   }
-  
- goAll() async {
 
-  Map<String, dynamic> data = <String, dynamic>{};
+  Widget formInv() {
+    return Container(
+      color: kContrastColorMedium,
+      child: Center(
+        child: Column(
+          children: [
+            Container(
+              color: kContrastColorMedium,
+              child: Padding(
+                padding: const EdgeInsets.only(
+                  right: 10,
+                  left: 10,
+                  top: 10,
+                  bottom: 15,
+                ),
+                child: Card(
+                  color: kContrastColor,
+                  shadowColor: kPrimaryColor,
+                  elevation: 8,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Column(
+                    children: [
+                      ComboProducts(
+                        onChanged: changeProduct,
+                        backgroundColor: kContrastColor,
+                        products: products,
+                        titulo: 'Productos',
+                      ),
+                      const SizedBox(height: 5),
+                      DefaultButton(
+                        text: 'Filtrar',
+                        press: () => getByProduct(),
+                      ),
+                      const SizedBox(height: 20),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
+            Container(
+              color: kContrastColorMedium,
+              child: Padding(
+                padding: const EdgeInsets.only(right: 10, left: 10, bottom: 15),
+                child: Card(
+                  color: kContrastColor,
+                  shadowColor: kPrimaryColor,
+                  elevation: 8,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Column(
+                    children: [
+                      ComboCategorias(
+                        onChanged: changeCategoria,
+                        backgroundColor: kContrastColor,
+                        categories: categories,
+                        titulo: 'Categorias',
+                      ),
+                      const SizedBox(height: 5),
+                      DefaultButton(
+                        text: 'Filtrar',
+                        press: () => getByCategoria(),
+                      ),
+                      const SizedBox(height: 20),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 10),
+            DefaultButton(text: 'Todo', press: () => goAll()),
+            const SizedBox(height: 10),
+          ],
+        ),
+      ),
+    );
+  }
+
+  goAll() async {
+    Map<String, dynamic> data = <String, dynamic>{};
     data['Tipo'] = 'Todo';
     data['descripcion'] = '';
     data['categoria'] = '';
-    
-    _getInventario(data);
 
+    _getInventario(data);
   }
-  
- refrescar() async {
-   
+
+  refrescar() async {
     setState(() {
-      inventario.detalle=[];
-      
+      inventario.detalle = [];
     });
   }
-  
- getByProduct() async {
- if(product.descripcion==null){
-   await Fluttertoast.showToast(
-          msg: "Seleccione un Producto",
-          toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.TOP,
-          timeInSecForIosWeb: 1,
-          backgroundColor: Colors.red,
-          textColor: Colors.white,
-          fontSize: 16.0
-      );     
+
+  getByProduct() async {
+    if (product.descripcion == null) {
+      await Fluttertoast.showToast(
+        msg: "Seleccione un Producto",
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.TOP,
+        timeInSecForIosWeb: 1,
+        backgroundColor: Colors.red,
+        textColor: Colors.white,
+        fontSize: 16.0,
+      );
       return;
-  }
-  Map<String, dynamic> data = <String, dynamic>{};
+    }
+    Map<String, dynamic> data = <String, dynamic>{};
     data['Tipo'] = 'Nombre';
     data['descripcion'] = product.descripcion;
     data['categoria'] = '';
-    
+
     _getInventario(data);
+  }
 
-}  
-
- Future<void>  _getCategories() async {
-     setState(() {
+  Future<void> _getCategories() async {
+    setState(() {
       showLoader = true;
     });
-   
+
     Response response = await ApiHelper.getCategoies();
 
     setState(() {
@@ -362,52 +410,52 @@ class _InventarioScreenState extends State<InventarioScreen> {
     if (!response.isSuccess) {
       showErrorFromDialog(response.message);
       return;
-    } 
+    }
 
-    setState(() {     
-        categories=response.result;
+    setState(() {
+      categories = response.result;
     });
-  }  
- 
- getByCategoria()  async {
-      if(category.name==null){
-        await Fluttertoast.showToast(
-          msg: "Seleccione una Categoria",
-          toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.TOP,
-          timeInSecForIosWeb: 1,
-          backgroundColor: Colors.red,
-          textColor: Colors.white,
-          fontSize: 16.0
-      );     
-      return;
   }
-  Map<String, dynamic> data = <String, dynamic>{};
+
+  getByCategoria() async {
+    if (category.name == null) {
+      await Fluttertoast.showToast(
+        msg: "Seleccione una Categoria",
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.TOP,
+        timeInSecForIosWeb: 1,
+        backgroundColor: Colors.red,
+        textColor: Colors.white,
+        fontSize: 16.0,
+      );
+      return;
+    }
+    Map<String, dynamic> data = <String, dynamic>{};
     data['Tipo'] = 'cate';
     data['descripcion'] = '';
     data['categoria'] = category.name;
-    
+
     _getInventario(data);
   }
 
- void changeProduct(selectItem) {
+  void changeProduct(selectItem) {
     setState(() {
-      product=selectItem;
+      product = selectItem;
     });
   }
 
- void changeCategoria(selectItem) {
-    category=selectItem;
+  void changeCategoria(selectItem) {
+    category = selectItem;
   }
 
-void showErrorFromDialog(String msg) async {
-await showAlertDialog(
-    context: context,
-    title: 'Error', 
-    message: msg,
-    actions: <AlertDialogAction>[
+  void showErrorFromDialog(String msg) async {
+    await showAlertDialog(
+      context: context,
+      title: 'Error',
+      message: msg,
+      actions: <AlertDialogAction>[
         const AlertDialogAction(key: null, label: 'Aceptar'),
-    ]
-  );       
+      ],
+    );
   }
 }

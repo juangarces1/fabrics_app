@@ -2,8 +2,8 @@ import 'package:fabrics_app/Models/detalle.dart';
 
 class Order {
   String? documentUser;
-  List<Detalle> detalles=[];
-  int? id; 
+  List<Detalle> detalles = [];
+  int? id;
   Order({this.documentUser, required this.detalles, this.id});
 
   Order.fromJson(Map<String, dynamic> json) {
@@ -12,8 +12,6 @@ class Order {
       detalles = <Detalle>[];
       json['detalles'].forEach((v) {
         detalles.add(Detalle.fromJson(v));
-
-        
       });
     }
   }
@@ -22,7 +20,7 @@ class Order {
     final Map<String, dynamic> data = <String, dynamic>{};
     data['documentUser'] = documentUser;
     data['detalles'] = detalles.map((v) => v.toJson()).toList();
-      data['id'] = id;
+    data['id'] = id ?? 0;
     return data;
   }
 }

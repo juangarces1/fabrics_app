@@ -1,5 +1,3 @@
-
-
 import 'package:fabrics_app/Components/custom_appbar_scan.dart';
 import 'package:fabrics_app/Components/scan_screen.dart';
 import 'package:fabrics_app/Models/order.dart';
@@ -8,7 +6,11 @@ import 'package:fabrics_app/constans.dart';
 import 'package:flutter/material.dart';
 
 class ScannerScreen extends StatefulWidget {
-  const ScannerScreen({super.key, required this.scanResult, required this.orden});
+  const ScannerScreen({
+    super.key,
+    required this.scanResult,
+    required this.orden,
+  });
   final String scanResult;
   final Order orden;
 
@@ -17,80 +19,77 @@ class ScannerScreen extends StatefulWidget {
 }
 
 class _ScannerScreenState extends State<ScannerScreen> {
- String? scanResult;
-  
+  String? scanResult;
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
-          appBar: PreferredSize(
-            preferredSize: Size.fromHeight(AppBar().preferredSize.height),
-            child:  CustomAppBarScan(              
-              press: () => goOrden(), titulo: const Text(''),    image: const AssetImage('assets/newPedidoAppBar.png'),
-            ),
-          ),
-        body:Column(
+        appBar: CustomAppBarScan(
+          press: () => Navigator.of(context).pop(),
+          titulo: const Text("Escanear Código"),
+        ),
+        body: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-          
-          Center(
-            child: ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(
-                foregroundColor: kContrastColor, backgroundColor: kPrimaryColor,
+            Center(
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  foregroundColor: kContrastColor,
+                  backgroundColor: kPrimaryColor,
+                ),
+                icon: const Icon(Icons.camera_alt_outlined),
+                label: const Text(
+                  'Escanear Codigo',
+                  style: TextStyle(fontSize: 25),
+                ),
+                onPressed: scanBarCode,
               ),
-             icon: const Icon(Icons.camera_alt_outlined),
-             label: const Text('Escanear Codigo', style: TextStyle(fontSize: 25),),
-             onPressed: scanBarCode, 
-             ),
-          ),
-           Text(scanResult==null ? 'Codigo' : 'Codigo: $scanResult',
-            style: const TextStyle(fontSize: 18),
-           ),
-              Center(
-            child: ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(
-                foregroundColor: kContrastColor, backgroundColor: kPrimaryColor,
+            ),
+            Text(
+              scanResult == null ? 'Codigo' : 'Codigo: $scanResult',
+              style: const TextStyle(fontSize: 18),
+            ),
+            Center(
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  foregroundColor: kContrastColor,
+                  backgroundColor: kPrimaryColor,
+                ),
+                icon: const Icon(Icons.arrow_back),
+                label: const Text('Enter', style: TextStyle(fontSize: 25)),
+                onPressed: scanBarCode,
               ),
-             icon: const Icon(Icons.arrow_back),
-             label: const Text('Enter', style: TextStyle(fontSize: 25),),
-             onPressed: scanBarCode, 
-             ),
-          ),
-
-
-          ]
+            ),
+          ],
         ),
       ),
-
     );
   }
 
-Future<void> scanBarCode() async {
-  // Navega a la pantalla de escaneo y espera el resultado
-  final result = await Navigator.push(
-    context,
-    MaterialPageRoute(builder: (context) => const ScanScreen()),
-  );
+  Future<void> scanBarCode() async {
+    // Navega a la pantalla de escaneo y espera el resultado
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const ScanScreen()),
+    );
 
-  if (result != null) {
-    setState(() {
-      scanResult = result;
-    });
-      
-   
+    if (result != null) {
+      setState(() {
+        scanResult = result;
+      });
+    }
   }
-}
-  
+
   goOrden() {
-      var scan = scanResult??'';
-     if(scan.isNotEmpty){
-     }
-      Navigator.pushReplacement(
-      context, 
+    var scan = scanResult ?? '';
+    if (scan.isNotEmpty) {}
+    Navigator.pushReplacement(
+      context,
       MaterialPageRoute(
-        builder: (context) =>  OrderScreen(orden: widget.orden, codigo: scan,)
-      )
+        builder: (context) => OrderScreen(orden: widget.orden, codigo: scan),
+      ),
     );
   }
 }

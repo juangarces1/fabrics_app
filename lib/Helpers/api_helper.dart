@@ -13,394 +13,374 @@ import 'package:fabrics_app/Models/roll.dart';
 import 'package:fabrics_app/Models/supplier.dart';
 import 'package:fabrics_app/Models/user.dart';
 
-class ApiHelper{
-  static Future<Response> getCierreActivo(int? password) async {  
-
+class ApiHelper {
+  static Future<Response> getCierreActivo(int? password) async {
     var url = Uri.parse('${Constans.apiUrl}/api/Orders/LogIn/$password');
     var response = await http.get(
       url,
       headers: {
-        'content-type' : 'application/json',
-        'accept' : 'application/json',
-      },        
+        'content-type': 'application/json',
+        'accept': 'application/json',
+      },
     );
 
     var body = response.body;
-   
+
     if (response.statusCode >= 400) {
-        body="Contraseña Incorrecta";
-       return Response(isSuccess: false, message: body);
+      body = "Contraseña Incorrecta";
+      return Response(isSuccess: false, message: body);
     }
 
-   
     var decodedJson = jsonDecode(body);
-   
 
     return Response(isSuccess: true, result: User.fromJson(decodedJson));
- }
+  }
 
-  static Future<Response> getInventario() async {  
-
+  static Future<Response> getInventario() async {
     var url = Uri.parse('${Constans.apiUrl}/api/Kilos/GetInventario/');
     var response = await http.get(
       url,
       headers: {
-        'content-type' : 'application/json',
-        'accept' : 'application/json',
-      },        
+        'content-type': 'application/json',
+        'accept': 'application/json',
+      },
     );
 
     var body = response.body;
-   
+
     if (response.statusCode >= 400) {
-        body="Contraseña Incorrecta";
-       return Response(isSuccess: false, message: body);
+      body = "Contraseña Incorrecta";
+      return Response(isSuccess: false, message: body);
     }
 
-   
     var decodedJson = jsonDecode(body);
-   
 
     return Response(isSuccess: true, result: Inventario.fromJson(decodedJson));
- }
+  }
 
-  static Future<Response> getOrdersByUser(String document) async {  
-
-    var url = Uri.parse('${Constans.apiUrl}/api/Kilos/GetOrdersByUser/$document');
+  static Future<Response> getOrdersByUser(String document) async {
+    var url = Uri.parse(
+      '${Constans.apiUrl}/api/Kilos/GetOrdersByUser/$document',
+    );
     var response = await http.get(
       url,
       headers: {
-        'content-type' : 'application/json',
-        'accept' : 'application/json',
-      },        
+        'content-type': 'application/json',
+        'accept': 'application/json',
+      },
     );
-    
 
     var body = response.body;
-   
+
     if (response.statusCode >= 400) {
-        
-       return Response(isSuccess: false, message: response.body);
+      return Response(isSuccess: false, message: response.body);
     }
 
     List<OrderView> pedidos = [];
     var decodedJson = jsonDecode(body);
-     if(decodedJson != null){
-      for (var item in decodedJson){
+    if (decodedJson != null) {
+      for (var item in decodedJson) {
         pedidos.add(OrderView.fromJson(item));
       }
     }
 
     return Response(isSuccess: true, result: pedidos);
- }
+  }
 
-  static Future<Response> getCompraByNum(String nume) async {  
-
+  static Future<Response> getCompraByNum(String nume) async {
     var url = Uri.parse('${Constans.apiUrl}/api/Kilos/GetCompraByNum/$nume');
     var response = await http.get(
       url,
       headers: {
-        'content-type' : 'application/json',
-        'accept' : 'application/json',
-      },        
+        'content-type': 'application/json',
+        'accept': 'application/json',
+      },
     );
-    
 
     var body = response.body;
-   
+
     if (response.statusCode >= 400) {
-        body="No se encontro la Compra";
-       return Response(isSuccess: false, message: body);
+      body = "No se encontro la Compra";
+      return Response(isSuccess: false, message: body);
     }
 
     List<Compra> compras = [];
     var decodedJson = jsonDecode(body);
-     if(decodedJson != null){
-      for (var item in decodedJson){
+    if (decodedJson != null) {
+      for (var item in decodedJson) {
         compras.add(Compra.fromJson(item));
       }
     }
 
     return Response(isSuccess: true, result: compras);
- }
- 
-  static Future<Response> getCategoies() async {  
+  }
+
+  static Future<Response> getCategoies() async {
     var url = Uri.parse('${Constans.apiUrl}/api/kilos/GetCategories/');
     var response = await http.get(
       url,
       headers: {
-        'content-type' : 'application/json',
-        'accept' : 'application/json',
-      },        
+        'content-type': 'application/json',
+        'accept': 'application/json',
+      },
     );
-    var body = response.body;   
+    var body = response.body;
     if (response.statusCode >= 400) {
-        body="Error";
-       return Response(isSuccess: false, message: body);    }   
-    var decodedJson = jsonDecode(body);   
-    List<Category> categories = [];    
-      if(decodedJson != null){
-        for (var item in decodedJson){
-          categories.add(Category.fromJson(item));
-        }
+      body = "Error";
+      return Response(isSuccess: false, message: body);
+    }
+    var decodedJson = jsonDecode(body);
+    List<Category> categories = [];
+    if (decodedJson != null) {
+      for (var item in decodedJson) {
+        categories.add(Category.fromJson(item));
       }
+    }
     return Response(isSuccess: true, result: categories);
- }
- 
-  static Future<Response> getSuppliers() async {  
+  }
+
+  static Future<Response> getSuppliers() async {
     var url = Uri.parse('${Constans.apiUrl}/api/kilos/GetSuppliers/');
     var response = await http.get(
       url,
       headers: {
-        'content-type' : 'application/json',
-        'accept' : 'application/json',
-      },        
+        'content-type': 'application/json',
+        'accept': 'application/json',
+      },
     );
-    var body = response.body;   
-    if (response.statusCode >= 400) {
-        body="Error";
-       return Response(isSuccess: false, message: body);    }   
-    var decodedJson = jsonDecode(body);   
-    List<Supplier> suppliers = [];    
-      if(decodedJson != null){
-        for (var item in decodedJson){
-          suppliers.add(Supplier.fromJson(item));
-        }
-      }
-    return Response(isSuccess: true, result: suppliers);
- }
-
-  static Future<Response> getProducts() async {  
-
-    var url = Uri.parse('${Constans.apiUrl}/api/Kilos/GetProducts/');
-     var response = await http.get(
-      
-      url,
-      headers: {
-        'content-type' : 'application/json',
-        'accept' : 'application/json',       
-      },     
-    );    
-
     var body = response.body;
-   
     if (response.statusCode >= 400) {
-        body="Error";
-       return Response(isSuccess: false, message: body);
+      body = "Error";
+      return Response(isSuccess: false, message: body);
     }
-
-   
     var decodedJson = jsonDecode(body);
-   
-    List<Product> products = [];
-    
-      if(decodedJson != null){
-        for (var item in decodedJson){
-          products.add(Product.fromJson(item));
-        }
+    List<Supplier> suppliers = [];
+    if (decodedJson != null) {
+      for (var item in decodedJson) {
+        suppliers.add(Supplier.fromJson(item));
       }
+    }
+    return Response(isSuccess: true, result: suppliers);
+  }
 
-    return Response(isSuccess: true, result: products);
- }
-  
-   static Future<Response> getProductsBySuplier(int id) async {  
-
-    var url = Uri.parse('${Constans.apiUrl}/api/Orders/GetProductsBySuplier/$id');
+  static Future<Response> getProducts() async {
+    var url = Uri.parse('${Constans.apiUrl}/api/Kilos/GetProducts/');
     var response = await http.get(
       url,
       headers: {
-        'content-type' : 'application/json',
-        'accept' : 'application/json',
-      },        
+        'content-type': 'application/json',
+        'accept': 'application/json',
+      },
     );
 
     var body = response.body;
-   
+
     if (response.statusCode >= 400) {
-        body="Error";
-       return Response(isSuccess: false, message: body);
+      body = "Error";
+      return Response(isSuccess: false, message: body);
     }
 
-   
     var decodedJson = jsonDecode(body);
-   
+
     List<Product> products = [];
-    
-      if(decodedJson != null){
-        for (var item in decodedJson){
-          products.add(Product.fromJson(item));
-        }
+
+    if (decodedJson != null) {
+      for (var item in decodedJson) {
+        products.add(Product.fromJson(item));
       }
+    }
 
     return Response(isSuccess: true, result: products);
- }
+  }
 
-   static Future<Response> getProductColors(Map<String, dynamic> request) async {  
+  static Future<Response> getProductsBySuplier(int id) async {
+    var url = Uri.parse(
+      '${Constans.apiUrl}/api/Orders/GetProductsBySuplier/$id',
+    );
+    var response = await http.get(
+      url,
+      headers: {
+        'content-type': 'application/json',
+        'accept': 'application/json',
+      },
+    );
 
+    var body = response.body;
+
+    if (response.statusCode >= 400) {
+      body = "Error";
+      return Response(isSuccess: false, message: body);
+    }
+
+    var decodedJson = jsonDecode(body);
+
+    List<Product> products = [];
+
+    if (decodedJson != null) {
+      for (var item in decodedJson) {
+        products.add(Product.fromJson(item));
+      }
+    }
+
+    return Response(isSuccess: true, result: products);
+  }
+
+  static Future<Response> getProductColors(Map<String, dynamic> request) async {
     var url = Uri.parse('${Constans.apiUrl}/api/Kilos/GetProductsByProduct/');
     var response = await http.post(
       url,
       headers: {
-        'content-type' : 'application/json',
-        'accept' : 'application/json',
-      },   
-      body:  jsonEncode(request)
+        'content-type': 'application/json',
+        'accept': 'application/json',
+      },
+      body: jsonEncode(request),
     );
 
     var body = response.body;
-   
+
     if (response.statusCode >= 400) {
-        body="Error";
-       return Response(isSuccess: false, message: body);
+      body = "Error";
+      return Response(isSuccess: false, message: body);
     }
 
-   
     var decodedJson = jsonDecode(body);
-   
+
     List<Product> products = [];
-    
-      if(decodedJson != null){
-        for (var item in decodedJson){
-          products.add(Product.fromJson(item));
-        }
+
+    if (decodedJson != null) {
+      for (var item in decodedJson) {
+        products.add(Product.fromJson(item));
       }
+    }
 
     return Response(isSuccess: true, result: products);
- }
+  }
 
-  static Future<Response> getColors() async {  
-
+  static Future<Response> getColors() async {
     var url = Uri.parse('${Constans.apiUrl}/api/Kilos/GetColors/');
     var response = await http.get(
       url,
       headers: {
-        'content-type' : 'application/json',
-        'accept' : 'application/json',
-      },        
+        'content-type': 'application/json',
+        'accept': 'application/json',
+      },
     );
 
     var body = response.body;
-   
+
     if (response.statusCode >= 400) {
-        body="Error";
-       return Response(isSuccess: false, message: body);
+      body = "Error";
+      return Response(isSuccess: false, message: body);
     }
 
-   
     var decodedJson = jsonDecode(body);
-   
+
     List<MyColor> colors = [];
-    
-      if(decodedJson != null){
-        for (var item in decodedJson){
-          colors.add(MyColor.fromJson(item));
-        }
+
+    if (decodedJson != null) {
+      for (var item in decodedJson) {
+        colors.add(MyColor.fromJson(item));
       }
+    }
 
     return Response(isSuccess: true, result: colors);
- }
+  }
 
-  static Future<Response> getRoll(int codigo) async {  
-
+  static Future<Response> getRoll(int codigo) async {
     var url = Uri.parse('${Constans.apiUrl}/api/Kilos/GetRoll/$codigo');
     var response = await http.get(
       url,
       headers: {
-        'content-type' : 'application/json',
-        'accept' : 'application/json',
-      },        
+        'content-type': 'application/json',
+        'accept': 'application/json',
+      },
     );
 
     var body = response.body;
-   
+
     if (response.statusCode >= 400) {
-        body="Error";
-       return Response(isSuccess: false, message: body);
+      body = "Error";
+      return Response(isSuccess: false, message: body);
     }
 
-   
     var decodedJson = jsonDecode(body);
-   
 
     return Response(isSuccess: true, result: Roll.fromJson(decodedJson));
- }
+  }
 
- static Future<Response> getPRoductById(int codigo) async {  
-
+  static Future<Response> getPRoductById(int codigo) async {
     var url = Uri.parse('${Constans.apiUrl}/api/Kilos/GetProductById/$codigo');
     var response = await http.get(
       url,
       headers: {
-        'content-type' : 'application/json',
-        'accept' : 'application/json',
-      },        
+        'content-type': 'application/json',
+        'accept': 'application/json',
+      },
     );
 
     var body = response.body;
-   
+
     if (response.statusCode >= 400) {
-        body="Error";
-       return Response(isSuccess: false, message: body);
+      body = "Error";
+      return Response(isSuccess: false, message: body);
     }
 
-   
     var decodedJson = jsonDecode(body);
-   
 
     return Response(isSuccess: true, result: Product.fromJson(decodedJson));
- }
+  }
 
-  static Future<Response> getProductByRoll(int codigo) async {  
-
-    var url = Uri.parse('${Constans.apiUrl}/api/Kilos/GetProductByRoll/$codigo');
+  static Future<Response> getProductByRoll(int codigo) async {
+    var url = Uri.parse(
+      '${Constans.apiUrl}/api/Kilos/GetProductByRoll/$codigo',
+    );
     var response = await http.get(
       url,
       headers: {
-        'content-type' : 'application/json',
-        'accept' : 'application/json',
-      },        
+        'content-type': 'application/json',
+        'accept': 'application/json',
+      },
     );
 
     var body = response.body;
-   
+
     if (response.statusCode >= 400) {
-        body="Error";
-       return Response(isSuccess: false, message: body);
+      body = "Error";
+      return Response(isSuccess: false, message: body);
     }
 
-   
     var decodedJson = jsonDecode(body);
-   
 
     return Response(isSuccess: true, result: Product.fromJson(decodedJson));
- }
+  }
 
-  static Future<Response> post(String controller, Map<String, dynamic>   request) async {        
+  static Future<Response> post(
+    String controller,
+    Map<String, dynamic> request,
+  ) async {
     var url = Uri.parse('${Constans.apiUrl}/$controller');
     var response = await http.post(
-      
       url,
       headers: {
-        'content-type' : 'application/json',
-        'accept' : 'application/json',       
+        'content-type': 'application/json',
+        'accept': 'application/json',
       },
-      body: jsonEncode(request)
-    );    
+      body: jsonEncode(request),
+    );
 
-    if(response.statusCode >= 400){    
+    if (response.statusCode >= 400) {
       return Response(isSuccess: false, message: response.body);
-    }     
-     return Response(isSuccess: true, result: response.body);
+    }
+    return Response(isSuccess: true, result: response.body);
   }
-  
-  static Future<Response> delete(String controller, String id) async { 
-    
+
+  static Future<Response> delete(String controller, String id) async {
     var url = Uri.parse('${Constans.apiUrl}$controller$id');
     var response = await http.delete(
       url,
       headers: {
-        'content-type' : 'application/json',
-        'accept' : 'application/json',       
+        'content-type': 'application/json',
+        'accept': 'application/json',
       },
     );
 
@@ -409,6 +389,143 @@ class ApiHelper{
     }
 
     return Response(isSuccess: true);
-  }  
+  }
 
+  /// Medir rollo físicamente y crear ajuste si hay diferencia
+  static Future<Response> measureRoll({
+    required int rollId,
+    required double cantidadFisica,
+    required int employeeId,
+    String? observaciones,
+  }) async {
+    var url = Uri.parse('${Constans.apiUrl}/api/Kilos/MeasureRoll');
+    var request = {
+      'rollId': rollId,
+      'cantidadFisica': cantidadFisica,
+      'employeeId': employeeId,
+      'observaciones': observaciones ?? '',
+    };
+
+    var response = await http.post(
+      url,
+      headers: {
+        'content-type': 'application/json',
+        'accept': 'application/json',
+      },
+      body: jsonEncode(request),
+    );
+
+    var body = response.body;
+
+    if (response.statusCode >= 400) {
+      return Response(isSuccess: false, message: body);
+    }
+
+    var decodedJson = jsonDecode(body);
+    return Response(isSuccess: true, result: decodedJson);
+  }
+
+  /// Finalizar rollo (dejar stock en 0 y cambiar estado a Vendido)
+  static Future<Response> finalizeRoll({
+    required int rollId,
+    required int employeeId,
+    String? observaciones,
+  }) async {
+    var url = Uri.parse('${Constans.apiUrl}/api/Kilos/FinalizeRoll');
+    var request = {
+      'rollId': rollId,
+      'employeeId': employeeId,
+      'observaciones': observaciones ?? '',
+    };
+
+    var response = await http.post(
+      url,
+      headers: {
+        'content-type': 'application/json',
+        'accept': 'application/json',
+      },
+      body: jsonEncode(request),
+    );
+
+    var body = response.body;
+
+    if (response.statusCode >= 400) {
+      return Response(isSuccess: false, message: body);
+    }
+
+    var decodedJson = jsonDecode(body);
+    return Response(isSuccess: true, result: decodedJson);
+  }
+
+  /// Registrar mermas y daños en un rollo
+  static Future<Response> registerDamage({
+    required int rollId,
+    required int employeeId,
+    required double cantidadDanada,
+    required int tipoDano,
+    String? descripcion,
+  }) async {
+    var url = Uri.parse('${Constans.apiUrl}/api/Kilos/RegisterDamage');
+    var request = {
+      'rollId': rollId,
+      'employeeId': employeeId,
+      'cantidadDanada': cantidadDanada,
+      'tipoDano': tipoDano,
+      'descripcion': descripcion ?? '',
+    };
+
+    var response = await http.post(
+      url,
+      headers: {
+        'content-type': 'application/json',
+        'accept': 'application/json',
+      },
+      body: jsonEncode(request),
+    );
+
+    var body = response.body;
+
+    if (response.statusCode >= 400) {
+      return Response(isSuccess: false, message: body);
+    }
+
+    var decodedJson = jsonDecode(body);
+    return Response(isSuccess: true, result: decodedJson);
+  }
+
+  /// Verificar rollo físicamente y crear ajuste si hay diferencia
+  static Future<Response> verifyRoll({
+    required int rollId,
+    required double stockMedido,
+    required int employeeId,
+    required int motivo,
+    String? observaciones,
+  }) async {
+    var url = Uri.parse('${Constans.apiUrl}/api/Kilos/VerifyRoll');
+    var request = {
+      'rollId': rollId,
+      'stockMedido': stockMedido,
+      'employeeId': employeeId,
+      'motivo': motivo,
+      'observaciones': observaciones ?? '',
+    };
+
+    var response = await http.post(
+      url,
+      headers: {
+        'content-type': 'application/json',
+        'accept': 'application/json',
+      },
+      body: jsonEncode(request),
+    );
+
+    var body = response.body;
+
+    if (response.statusCode >= 400) {
+      return Response(isSuccess: false, message: body);
+    }
+
+    var decodedJson = jsonDecode(body);
+    return Response(isSuccess: true, result: decodedJson);
+  }
 }

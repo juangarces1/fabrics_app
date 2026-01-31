@@ -9,11 +9,12 @@ import 'package:fabrics_app/Components/scan_screen.dart';
 import 'package:fabrics_app/Components/text_derecha.dart';
 import 'package:fabrics_app/Components/text_encabezado.dart';
 import 'package:fabrics_app/Helpers/api_helper.dart';
+import 'package:fabrics_app/Helpers/scanner_helper.dart';
 import 'package:fabrics_app/Models/descuento.dart';
 import 'package:fabrics_app/Models/product.dart';
 import 'package:fabrics_app/Models/response.dart';
 import 'package:fabrics_app/Models/user.dart';
-import 'package:fabrics_app/Screens/home_screen.dart';
+import 'package:fabrics_app/Screens/home_screen_modern.dart';
 import 'package:fabrics_app/constans.dart';
 import 'package:fabrics_app/sizeconfig.dart';
 import 'package:flutter/material.dart';
@@ -90,9 +91,7 @@ class _NewProdSearchState extends State<NewProdSearch>
           preferredSize: const Size.fromHeight(70),
           child: Container(
             height: 70,
-            decoration: const BoxDecoration(
-              gradient: kGradientHome,
-            ),
+            decoration: const BoxDecoration(gradient: kGradientHome),
             child: Padding(
               padding: const EdgeInsets.only(left: 10, right: 10),
               child: Row(
@@ -128,7 +127,12 @@ class _NewProdSearchState extends State<NewProdSearch>
                       vertical: 5,
                     ),
                     decoration: BoxDecoration(
-                      color: const Color.fromARGB(255, 70, 65, 65).withOpacity(0.5),
+                      color: const Color.fromARGB(
+                        255,
+                        70,
+                        65,
+                        65,
+                      ).withOpacity(0.5),
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: Text(
@@ -143,7 +147,9 @@ class _NewProdSearchState extends State<NewProdSearch>
                   ),
 
                   // Aquí ya no necesitas el ícono switch, se quita
-                  const SizedBox(width: 35), // Para ocupar el espacio a la derecha
+                  const SizedBox(
+                    width: 35,
+                  ), // Para ocupar el espacio a la derecha
                 ],
               ),
             ),
@@ -160,7 +166,7 @@ class _NewProdSearchState extends State<NewProdSearch>
                 Container(
                   color: Colors.white10,
                   child: Container(
-                      color: const Color.fromARGB(255, 49, 9, 83),
+                    color: const Color.fromARGB(255, 49, 9, 83),
                     child: TabBar(
                       labelStyle: GoogleFonts.oswald(
                         fontStyle: FontStyle.normal,
@@ -169,7 +175,12 @@ class _NewProdSearchState extends State<NewProdSearch>
                       ),
                       controller: _tabController,
                       labelColor: Colors.white,
-                      unselectedLabelColor:const Color.fromARGB(255, 110, 108, 108),
+                      unselectedLabelColor: const Color.fromARGB(
+                        255,
+                        110,
+                        108,
+                        108,
+                      ),
                       indicatorColor: Colors.white,
                       tabs: const [
                         Tab(text: "Buscar"),
@@ -188,7 +199,7 @@ class _NewProdSearchState extends State<NewProdSearch>
                       _buildSearchTab(),
 
                       // Pestaña 2: Detalles
-                      _buildDetailsTab(),
+                      _buildDetailsTab(context),
                     ],
                   ),
                 ),
@@ -209,19 +220,11 @@ class _NewProdSearchState extends State<NewProdSearch>
       child: Column(
         children: [
           // Scanner
-          ScanBarCode(
-            press: scanBarCode,
-          ),
+          ScanBarCode(press: scanBarCode),
           // Código Rollo
-          Container(
-            color: kColorAlternativo,
-            child: _showCodigo(),
-          ),
+          Container(color: kColorAlternativo, child: _showCodigo()),
           // Código Producto
-          Container(
-            color: kColorAlternativo,
-            child: _showCodigoProducto(),
-          ),
+          Container(color: kColorAlternativo, child: _showCodigoProducto()),
           // Separador
           Container(height: 15, color: kContrastColor),
 
@@ -255,10 +258,7 @@ class _NewProdSearchState extends State<NewProdSearch>
                     ),
                     const SizedBox(height: 10),
                     // Botón BUSCAR
-                    DefaultButton(
-                      text: 'Buscar',
-                      press: goBuscarSelect,
-                    ),
+                    DefaultButton(text: 'Buscar', press: goBuscarSelect),
                     const SizedBox(height: 20),
                   ],
                 ),
@@ -271,15 +271,18 @@ class _NewProdSearchState extends State<NewProdSearch>
   }
 
   // ======================== PESTAÑA DE DETALLES ========================
-  Widget _buildDetailsTab() {
-    return SingleChildScrollView(
-      child: Column(
-        children: [
-          // Solo muestra info si hay un producto cargado
-          product.descripcion != null ? _showInfo() : Container(),
-          product.rolls != null ? _showListRolls() : Container(),
-          movs.isNotEmpty ? _showListMovs() : Container(),
-        ],
+  Widget _buildDetailsTab(BuildContext context) {
+    return SafeArea(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (product.descripcion != null) _showInfo(),
+            if ((product.rolls?.isNotEmpty ?? false)) _showListRolls(),
+            if (movs.isNotEmpty) _showListMovs(),
+          ],
+        ),
       ),
     );
   }
@@ -441,8 +444,11 @@ class _NewProdSearchState extends State<NewProdSearch>
       showLoader = true;
     });
 
-    String code1 = cides.substring(1, 9);
-    int code = int.parse(code1);
+    int? code = ScannerHelper.extractRollId(cides);
+    if (code == null) {
+      await Fluttertoast.showToast(msg: 'Código inválido');
+      return;
+    }
     Response response = await ApiHelper.getProductByRoll(code);
 
     setState(() {
@@ -632,168 +638,132 @@ class _NewProdSearchState extends State<NewProdSearch>
     });
   }
 
+  // =================== ROLLOS ===================
+  Widget _showListRolls() {
+    final count = product.rolls?.length ?? 0;
+    if (count == 0) return const SizedBox.shrink();
+
+    return _ExpandableSection(
+      title: 'Rollos',
+      count: count,
+      initiallyExpanded: false,
+      child: SizedBox(
+        height: 240,
+        child: ListView.separated(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          scrollDirection: Axis.horizontal,
+          itemBuilder: (_, i) => CardRoll(roll: product.rolls![i]),
+          separatorBuilder: (_, __) => const SizedBox(width: 12),
+          itemCount: count,
+        ),
+      ),
+    );
+  }
+
+  // =================== MOVIMIENTOS ===================
+  Widget _showListMovs() {
+    final count = movs.length;
+    if (count == 0) return const SizedBox.shrink();
+
+    return _ExpandableSection(
+      title: 'Movimientos',
+      count: count,
+      initiallyExpanded: false,
+      child: Container(
+        height: 240,
+        padding: const EdgeInsets.all(8),
+        child: ListWheelScrollView.useDelegate(
+          perspective: 0.0025,
+          itemExtent: 86,
+          physics: const FixedExtentScrollPhysics(),
+          childDelegate: ListWheelChildBuilderDelegate(
+            builder: (_, i) => CardMovimiento(descuento: movs[i]),
+            childCount: count,
+          ),
+        ),
+      ),
+    );
+  }
+
   // ======================== DETALLES DEL PRODUCTO ========================
   Widget _showInfo() {
-    return Container(
-      decoration: const BoxDecoration(
-        color: kContrastColorMedium,
-      ),
-      child: Padding(
-        padding: const EdgeInsets.only(left: 20.0, right: 20, top: 10, bottom: 10),
-        child: Card(
-          color: Colors.white70,
-          shadowColor: kPrimaryColor,
-          elevation: 8,
-          child: Padding(
-            padding: const EdgeInsets.all(8),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                  const TextEncabezado(texto: 'Producto: '),
-                  TextDerecha(texto: product.descripcion!),
-                ]),
-                Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                  const TextEncabezado(texto: 'Color: '),
-                  TextDerecha(texto: product.color!),
-                ]),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const TextEncabezado(texto: 'Stock: '),
-                    TextDerecha(texto: product.stock.toString()),
-                    const SizedBox(width: 10),
-                    const TextEncabezado(texto: 'Stock Bodega: '),
-                    TextDerecha(texto: product.stockEnBodega.toString()),
-                  ],
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const TextEncabezado(texto: 'Stock Almacen: '),
-                    TextDerecha(texto: product.stockEnAlmacen.toString()),
-                    const SizedBox(width: 10),
-                    const TextEncabezado(texto: 'Unidad: '),
-                    TextDerecha(texto: product.medida!),
-                  ],
-                ),
-                Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                  const TextEncabezado(texto: 'Rollos: '),
-                  TextDerecha(texto: product.rolls!.length.toString()),
-                  const SizedBox(width: 10),
-                  const TextEncabezado(texto: 'Ultima Entrada: '),
-                  TextDerecha(texto: product.ultimaEntrada!),
-                ]),
-                Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                  const TextEncabezado(texto: 'Total Entradas: '),
-                  TextDerecha(texto: product.totalEntradas.toString()),
-                  const SizedBox(width: 10),
-                  const TextEncabezado(texto: 'Total Salidas: '),
-                  TextDerecha(texto: product.totalSalidas.toString()),
-                ]),
-                Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                  const TextEncabezado(texto: 'Prom Compra: '),
-                  TextDerecha(
-                    texto: NumberFormat("##.0#", "en_US").format(product.precioPromedio),
-                  ),
-                  const SizedBox(width: 10),
-                  const TextEncabezado(texto: 'Ult Compra: '),
-                  TextDerecha(
-                    texto: NumberFormat("##.0#", "en_US").format(product.ultimoPrecio),
-                  ),
-                ]),
-                Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                  const TextEncabezado(texto: ' Prom Venta: '),
-                  TextDerecha(texto: product.promVenta!),
-                  const SizedBox(width: 10),
-                  const TextEncabezado(texto: 'Ult Venta: '),
-                  TextDerecha(texto: product.ultimaVenta!),
-                ]),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+    final n = NumberFormat("##.0#", "en_US");
 
-  Widget _showListRolls() {
     return Container(
-      color: kColorAlternativo,
-      child: Column(
-        children: [
-          const SizedBox(height: 10),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: getProportionateScreenWidth(10)),
-            child: Center(
-              child: Text(
-                'Rollos',
-                style: GoogleFonts.oswald(
-                  fontStyle: FontStyle.normal,
-                  fontSize: 17,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.white,
-                ),
-              ),
-            ),
+      decoration: BoxDecoration(
+        color: _DarkPalette.surface.withOpacity(.8),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _DarkPalette.border),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(.35),
+            blurRadius: 18,
+            offset: const Offset(0, 10),
           ),
-          const Divider(height: 10, thickness: 2, color: kContrastColor),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                ...List.generate(
-                  product.rolls!.length,
-                  (index) {
-                    return CardRoll(roll: product.rolls![index]);
-                  },
-                ),
-                SizedBox(width: getProportionateScreenWidth(20)),
-              ],
-            ),
-          ),
-          const Divider(height: 10, thickness: 2, color: kContrastColor),
         ],
       ),
-    );
-  }
-
-  Widget _showListMovs() {
-    return Column(
-      children: [
-        Container(
-          color: kColorAlternativo,
-          child: Center(
-            child: Text(
-              'Movimientos',
-              style: GoogleFonts.oswald(
-                fontStyle: FontStyle.normal,
-                fontSize: 17,
-                fontWeight: FontWeight.w500,
-                color: Colors.white,
-              ),
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            product.descripcion!,
+            textAlign: TextAlign.center,
+            style: GoogleFonts.oswald(
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+              color: _DarkPalette.textPrimary,
+              letterSpacing: .5,
             ),
           ),
-        ),
-        Container(
-          height: 150,
-          color: kColorAlternativo,
-          child: Padding(
-            padding: const EdgeInsets.all(8),
-            child: ListWheelScrollView.useDelegate(
-              perspective: 0.005,
-              itemExtent: 80,
-              physics: const FixedExtentScrollPhysics(),
-              childDelegate: ListWheelChildBuilderDelegate(
-                builder: (context, index) {
-                  return CardMovimiento(descuento: movs[index]);
-                },
-                childCount: movs.length,
+          const SizedBox(height: 8),
+          const Divider(height: 16, thickness: 1, color: _DarkPalette.divider),
+          const SizedBox(height: 6),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _InfoChip(label: 'Color', value: product.color ?? '-'),
+              _InfoChip(label: 'Unidad', value: product.medida ?? '-'),
+              _InfoChip(
+                label: 'Rollos',
+                value: '${product.rolls?.length ?? 0}',
               ),
-            ),
+              _InfoChip(label: 'Stock', value: '${product.stock ?? 0}'),
+              _InfoChip(
+                label: 'Bodega',
+                value: '${product.stockEnBodega ?? 0}',
+              ),
+              _InfoChip(
+                label: 'Almacén',
+                value: '${product.stockEnAlmacen ?? 0}',
+              ),
+              _InfoChip(
+                label: 'Últ. Entrada',
+                value: product.ultimaEntrada ?? '-',
+              ),
+              _InfoChip(
+                label: 'Tot. Entradas',
+                value: '${product.totalEntradas ?? 0}',
+              ),
+              _InfoChip(
+                label: 'Tot. Salidas',
+                value: '${product.totalSalidas ?? 0}',
+              ),
+              _InfoChip(
+                label: 'Prom. Compra',
+                value: n.format(product.precioPromedio ?? 0),
+              ),
+              _InfoChip(
+                label: 'Últ. Compra',
+                value: n.format(product.ultimoPrecio ?? 0),
+              ),
+              _InfoChip(label: 'Prom. Venta', value: product.promVenta ?? '-'),
+              _InfoChip(label: 'Últ. Venta', value: product.ultimaVenta ?? '-'),
+            ],
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -802,8 +772,177 @@ class _NewProdSearchState extends State<NewProdSearch>
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => HomeScreen(user: widget.user),
+        builder: (context) => HomeScreenModern(user: widget.user),
       ),
     );
   }
+}
+
+class _SectionHeader extends StatelessWidget {
+  final String title;
+  const _SectionHeader({required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 10),
+      decoration: const BoxDecoration(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0x338B5CF6), // primary con opacidad
+            Color(0x3322D3EE), // secondary con opacidad
+          ],
+        ),
+      ),
+      child: Center(
+        child: Text(
+          title,
+          style: GoogleFonts.oswald(
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+            color: _DarkPalette.textPrimary,
+            letterSpacing: .4,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _InfoChip extends StatelessWidget {
+  final String label;
+  final String value;
+  const _InfoChip({required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: _DarkPalette.surfaceVariant.withOpacity(.5),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: _DarkPalette.border),
+      ),
+      child: RichText(
+        text: TextSpan(
+          children: [
+            TextSpan(
+              text: '$label: ',
+              style: GoogleFonts.robotoMono(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: _DarkPalette.textSecondary,
+              ),
+            ),
+            TextSpan(
+              text: value,
+              style: GoogleFonts.robotoMono(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: _DarkPalette.textPrimary,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ExpandableSection extends StatelessWidget {
+  final String title;
+  final int count;
+  final Widget child;
+  final bool initiallyExpanded;
+
+  const _ExpandableSection({
+    required this.title,
+    required this.count,
+    required this.child,
+    this.initiallyExpanded = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(top: 12),
+      child: ExpansionTile(
+        initiallyExpanded: initiallyExpanded,
+        tilePadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+        childrenPadding: const EdgeInsets.fromLTRB(6, 0, 6, 12),
+        backgroundColor: _DarkPalette.surfaceVariant.withOpacity(.5),
+        collapsedBackgroundColor: _DarkPalette.surfaceVariant.withOpacity(.7),
+        iconColor: _DarkPalette.textSecondary,
+        collapsedIconColor: _DarkPalette.textSecondary,
+        textColor: _DarkPalette.textPrimary,
+        collapsedTextColor: _DarkPalette.textPrimary,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: _DarkPalette.border),
+        ),
+        collapsedShape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: _DarkPalette.border),
+        ),
+        title: Row(
+          children: [
+            Expanded(
+              child: Text(
+                title,
+                style: GoogleFonts.oswald(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: _DarkPalette.textPrimary,
+                  letterSpacing: .4,
+                ),
+              ),
+            ),
+            _CountBadge(count: count),
+          ],
+        ),
+        children: [child],
+      ),
+    );
+  }
+}
+
+class _CountBadge extends StatelessWidget {
+  final int count;
+  const _CountBadge({required this.count});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: _DarkPalette.primary.withOpacity(.18),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: _DarkPalette.border),
+      ),
+      child: Text(
+        '$count',
+        style: GoogleFonts.robotoMono(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: _DarkPalette.textPrimary,
+        ),
+      ),
+    );
+  }
+}
+
+class _DarkPalette {
+  static const background = Color(0xFF0F1115);
+  static const surface = Color(0xFF1B1E23);
+  static const surfaceVariant = Color(0xFF262A34);
+  static const primary = Color(0xFF8B5CF6); // púrpura
+  static const secondary = Color(0xFF22D3EE); // cian
+  static const textPrimary = Color.fromARGB(255, 255, 255, 255);
+  static const textSecondary = Color(0xFFB9C0CC);
+  static const border = Color(0x22FFFFFF);
+  static const divider = Color(0x1FFFFFFF);
 }

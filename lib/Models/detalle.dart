@@ -7,14 +7,22 @@ class Detalle {
   String? color;
   int? codigoProducto;
 
-
-  Detalle({this.codigoRollo, this.price, this.cantidad, this.total, this.producto, this.color, this.codigoProducto});
+  Detalle({
+    this.codigoRollo,
+    this.price,
+    this.cantidad,
+    this.total,
+    this.producto,
+    this.color,
+    this.codigoProducto,
+  });
 
   Detalle.fromJson(Map<String, dynamic> json) {
-    codigoRollo = json['codigoRollo'];
-    price = json['precio'].toDouble();
-    cantidad = json['cant'].toDouble();
-    total=json['valor'].toDouble();
+    codigoRollo = json['codigoRollo'] ?? 0;
+    // Support both API keys (precio, cant, valor) and local storage keys (price, cantidad, total)
+    price = (json['precio'] ?? json['price'])?.toDouble() ?? 0.0;
+    cantidad = (json['cant'] ?? json['cantidad'])?.toDouble() ?? 0.0;
+    total = (json['valor'] ?? json['total'])?.toDouble() ?? 0.0;
     producto = json['producto'];
     color = json['color'];
     codigoProducto = json['codigoProducto'];
@@ -26,6 +34,7 @@ class Detalle {
     data['codigoRollo'] = codigoRollo;
     data['price'] = price;
     data['cantidad'] = cantidad;
+    data['valor'] = total;
     return data;
   }
 }

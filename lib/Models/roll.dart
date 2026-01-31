@@ -15,19 +15,20 @@ class Roll {
   double? inventario;
   int? movimienotos;
 
-  Roll(
-      {this.id,
-      this.cantidad,
-      this.rolloPadre,
-      this.precio,
-      this.totalValue,
-      this.medida,
-      this.status,
-      this.product,
-      this.descuentos,
-      this.codigoBarras,
-      this.inventario,
-      this.movimienotos});
+  Roll({
+    this.id,
+    this.cantidad,
+    this.rolloPadre,
+    this.precio,
+    this.totalValue,
+    this.medida,
+    this.status,
+    this.product,
+    this.descuentos,
+    this.codigoBarras,
+    this.inventario,
+    this.movimienotos,
+  });
 
   Roll.fromJson(Map<String, dynamic> json) {
     id = json['id'];
@@ -37,8 +38,9 @@ class Roll {
     totalValue = json['totalValue'].toDouble();
     medida = json['medida'];
     status = json['status'];
-    product =
-        json['product'] != null ? Product.fromJson(json['product']) : null;
+    product = json['product'] != null
+        ? Product.fromJson(json['product'])
+        : null;
     if (json['descuentos'] != null) {
       descuentos = <Descuento>[];
       json['descuentos'].forEach((v) {
@@ -46,7 +48,7 @@ class Roll {
       });
     }
     codigoBarras = json['codigoBarras'];
-    inventario = json['inventario'];
+    inventario = json['inventario']?.toDouble();
     movimienotos = json['movimienotos'];
   }
 
@@ -66,7 +68,7 @@ class Roll {
     data['codigoBarras'] = codigoBarras;
     data['inventario'] = inventario;
     data['movimienotos'] = movimienotos;
-    data['status']=status;
+    data['status'] = status;
     return data;
   }
 }

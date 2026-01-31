@@ -1,28 +1,29 @@
-
-
 import 'package:adaptive_dialog/adaptive_dialog.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:fabrics_app/Components/custom_appbar_scan.dart';
 import 'package:fabrics_app/Components/loader_component.dart';
-import 'package:fabrics_app/Components/text_derecha.dart';
-import 'package:fabrics_app/Components/text_encabezado.dart';
 import 'package:fabrics_app/Helpers/api_helper.dart';
 import 'package:fabrics_app/Models/detalle.dart';
 import 'package:fabrics_app/Models/order.dart';
 import 'package:fabrics_app/Models/response.dart';
 import 'package:fabrics_app/Models/user.dart';
-import 'package:fabrics_app/Screens/add_product_old.dart';
 import 'package:fabrics_app/Screens/add_product_screen.dart';
+import 'package:fabrics_app/Screens/add_product_old.dart';
 import 'package:fabrics_app/Screens/pedidos_screen.dart';
 import 'package:fabrics_app/constans.dart';
-import 'package:fabrics_app/sizeconfig.dart';
+import 'package:provider/provider.dart';
+import 'package:fabrics_app/Providers/cart_provider.dart';
 
 class EditOrderScreen extends StatefulWidget {
-  const EditOrderScreen({super.key, required this.orden, required this.user, required this.isOld});
+  const EditOrderScreen({
+    super.key,
+    required this.orden,
+    required this.user,
+    required this.isOld,
+  });
   final Order orden;
   final User user;
   final bool isOld;
@@ -31,106 +32,151 @@ class EditOrderScreen extends StatefulWidget {
 }
 
 class _EditOrderScreenState extends State<EditOrderScreen> {
-  List<Detalle> detalles = [];
   bool showLoader = false;
-  String _precio='';
-  String _cantidad='';
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Scaffold(
-        appBar:  PreferredSize(
-              preferredSize: Size.fromHeight(AppBar().preferredSize.height),
-              child:  CustomAppBarScan(              
-                press: () => goOut(),
-                 titulo:  Text(widget.isOld ? 'Editar Orden' : 'Editar Pedido',
-                  style:  GoogleFonts.oswald(fontStyle: FontStyle.normal, fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
-                     image: const AssetImage('assets/AppBar.png'),
+    context.watch<CartProvider>();
+    return Scaffold(
+      appBar: CustomAppBarScan(
+        press: () => Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (context) => PedidosScreen(user: widget.user),
+          ),
+        ),
+        titulo: Text(
+          'Orden #${widget.orden.id}',
+          style: GoogleFonts.oswald(
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        image: const AssetImage('assets/logoKGrande.png'),
+      ),
+      body: Stack(
+        children: [
+          // Background Gradient
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [kPrimaryColor.withOpacity(0.05), Colors.white],
               ),
             ),
-        body:  Center(
-          child: showLoader ? const LoaderComponent(text: 'Por favor espere...') : _getContent()),
-           bottomNavigationBar: BottomAppBar(
-          color: kColorNuevoPedido,
-          shape: const CircularNotchedRectangle(),
-          child: IconTheme(
-            data: IconThemeData(color: Theme.of(context).colorScheme.onPrimary),
-           child: SizedBox(
-            height: 70,
-             child: Row(
-               mainAxisSize: MainAxisSize.max,
-               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: <Widget>[
-                  Padding(
-                   padding: const EdgeInsets.only(top: 3, bottom: 3),
-                   child: RawMaterialButton(
-                      onPressed: _goAdd,
-                      elevation: 2.0,
-                      fillColor: const Color.fromARGB(255, 12, 163, 92),
-                      padding: const EdgeInsets.all(12.0),
-                      shape: const CircleBorder(),
-                      child: const Icon(
-                        Icons.add,
-                        size: 25.0,
+          ),
+          _getContent(),
+        ],
+      ),
+      bottomNavigationBar: _buildBottomBar(),
+    );
+  }
+
+  Widget _buildBottomBar() {
+    final cart = context.read<CartProvider>();
+    double total = cart.totalAmount;
+
+    return Container(
+      height: 100,
+      decoration: BoxDecoration(
+        gradient: kGradientHome,
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(24),
+          topRight: Radius.circular(24),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: kPrimaryColor.withValues(alpha: 0.3),
+            blurRadius: 15,
+            offset: const Offset(0, -5),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // Add Button
+              RawMaterialButton(
+                onPressed: _goAdd,
+                elevation: 4.0,
+                fillColor: Colors.white.withValues(alpha: 0.15),
+                padding: const EdgeInsets.all(12.0),
+                shape: const CircleBorder(),
+                child: const Icon(
+                  Icons.add_shopping_cart,
+                  size: 28.0,
+                  color: Colors.white,
+                ),
+              ),
+
+              // Total Info
+              if (cart.items.isNotEmpty)
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      '${cart.itemCount} Productos',
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        color: Colors.white70,
                       ),
                     ),
-                 ),
-                Text( widget.orden.detalles.isNotEmpty ? 'Prod: ${widget.orden.detalles.length.toString()} -  \$${NumberFormat("###,000", "es_CO").format(widget.orden.detalles.map((item)=>item.total!).reduce((value, element) => value + element))}' : '',  style:  GoogleFonts.oswald(fontStyle: FontStyle.normal, fontSize: 19, fontWeight: FontWeight.bold, color: Colors.white)),
-                 Padding(
-                   padding: const EdgeInsets.only(top: 3, bottom: 3),
-                   child: RawMaterialButton(
-                      onPressed: goSave,
-                      elevation: 2.0,
-                      fillColor: const Color.fromARGB(255, 20, 121, 189),
-                      padding: const EdgeInsets.all(12.0),
-                      shape: const CircleBorder(),
-                      child: const Icon(
-                        Icons.save,
-                        size: 25.0,
+                    Text(
+                      '\$${NumberFormat("###,000", "es_CO").format(total)}',
+                      style: GoogleFonts.oswald(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
                         color: Colors.white,
                       ),
                     ),
-                 ),
-                 ],          
-               ),
-           ),
+                  ],
+                ),
+
+              // Save Button
+              RawMaterialButton(
+                onPressed: goSave,
+                elevation: 4.0,
+                fillColor: const Color(0xFFE4C643),
+                padding: const EdgeInsets.all(12.0),
+                shape: const CircleBorder(),
+                child: const Icon(
+                  Icons.save_outlined,
+                  size: 28.0,
+                  color: Colors.black87,
+                ),
+              ),
+            ],
           ),
-         ), 
+        ),
       ),
     );
   }
 
-  void  goSave()  async {
-      if(widget.orden.detalles.isEmpty){
-       await showAlertDialog(
-        context: context,
-        title: 'Error', 
-        message: 'Agregue un Producto.',
-        actions: <AlertDialogAction>[
-            const AlertDialogAction(key: null, label: 'Aceptar'),
-        ]
-      );    
-      return;
-    }    
-     setState(() {
-      showLoader = true;
-    });    
-  
-   widget.orden.documentUser=widget.user.document;
-   Map<String, dynamic> request = widget.orden.toJson();
-
-   Response response = Response(isSuccess: false);
-    if(widget.isOld){
-       response = await ApiHelper.post(
-      'api/Kilos/PostOrderOld/', 
-       request,       
-     );
-    }
-    else{
-       response = await ApiHelper.post(
-      'api/Kilos/PostOrder/', 
-       request,       
+  void goSave() async {
+    final cart = context.read<CartProvider>();
+    if (cart.items.isEmpty) {
+      await Fluttertoast.showToast(
+        msg: 'No hay productos para guardar',
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.CENTER,
       );
+      return;
+    }
+    setState(() {
+      showLoader = true;
+    });
+
+    cart.setDocumentUser(widget.user.document);
+    Map<String, dynamic> request = cart.activeOrder!.toJson();
+
+    Response response = Response(isSuccess: false);
+    if (widget.isOld) {
+      response = await ApiHelper.post('api/kilos/PostOrderOld/', request);
+    } else {
+      response = await ApiHelper.post('api/kilos/PostOrder/', request);
     }
 
     setState(() {
@@ -138,297 +184,515 @@ class _EditOrderScreenState extends State<EditOrderScreen> {
     });
 
     if (!response.isSuccess) {
-     showErrorFromDialog(response.message);
+      showErrorFromDialog(response.message);
       return;
-    }  
+    }
 
     setState(() {
-      widget.orden.detalles.clear();       
+      cart.clearCart();
     });
-      
-    await  Fluttertoast.showToast(
-          msg: 'Orden Creada Correctamente',
-          toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.TOP,
-          timeInSecForIosWeb: 1,
-          backgroundColor: const Color.fromARGB(255, 3, 148, 59),
-          textColor: Colors.white,
-          fontSize: 16.0
-      );     
-    
-      goOut();
+
+    await Fluttertoast.showToast(
+      msg: 'Orden Guardada Correctamente',
+      toastLength: Toast.LENGTH_SHORT,
+      gravity: ToastGravity.TOP,
+      backgroundColor: const Color.fromARGB(255, 14, 131, 29),
+      textColor: Colors.white,
+    );
+
+    if (!mounted) return;
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(builder: (context) => PedidosScreen(user: widget.user)),
+    );
   }
 
   Widget _getContent() {
-    return widget.orden.detalles.isEmpty 
-      ? _noContent()
-      : _getList();
+    if (showLoader) {
+      return const Center(child: LoaderComponent(text: 'Por favor espere...'));
+    }
+    final cart = context.read<CartProvider>();
+    return cart.items.isEmpty ? _noContent() : _getList();
   }
-  
+
   void _goAdd() {
-    if(widget.isOld==false){
-      Navigator.of(context).pushReplacement(  
-      MaterialPageRoute(
-        builder: (context) => AddProductScreen(user: widget.user,      
-          orden: widget.orden,
-          ruta: "New",
-          )
-        )
+    if (widget.isOld == false) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (context) => AddProductScreen(
+            user: widget.user,
+            orden: widget.orden,
+            ruta: "New",
+          ),
+        ),
+      );
+    } else {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (context) => AddOldProduct(
+            user: widget.user,
+            orden: widget.orden,
+            ruta: "Edit",
+          ),
+        ),
       );
     }
-    else{
-      Navigator.of(context).pushReplacement(  
-      MaterialPageRoute(
-        builder: (context) => AddOldProduct(user: widget.user,      
-          orden: widget.orden,
-          ruta: "Edit",
-        )
-      ));
-    }
-    
   }
- 
+
   _noContent() {
-      return const Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children:  [
-          SizedBox(
-           
-            height: 400,
-            width: 400,
-            child: Image(image: AssetImage('assets/cart_empty.png'))),
-        
-          Text(
-            'Agregue algun producto al Carrito.',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(40),
+            decoration: BoxDecoration(
+              color: kPrimaryColor.withValues(alpha: 0.05),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.shopping_cart_outlined,
+              size: 100,
+              color: kPrimaryColor.withValues(alpha: 0.2),
             ),
           ),
+          const SizedBox(height: 24),
+          Text(
+            '¡Tu carrito está vacío!',
+            style: GoogleFonts.oswald(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: kPrimaryColor,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Agrega productos para comenzar\na editar tu orden.',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.poppins(fontSize: 15, color: Colors.grey[600]),
+          ),
         ],
-      );
+      ),
+    );
   }
 
   _getList() {
-    return Container(
-        color: kContrastColor,
-        child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: getProportionateScreenWidth(10), vertical: getProportionateScreenHeight(10)),
-        child: ListView.builder(          
-          itemCount: widget.orden.detalles.length,
-          itemBuilder: (context, index)  
-          { 
-            final item = widget.orden.detalles[index].codigoRollo.toString();
-            return 
-            Card(
-              color: Colors.white,
-               shadowColor: Colors.blueGrey,
-                elevation: 8,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-              child: Padding              (
-                padding: const EdgeInsets.symmetric(vertical: 0),
-                child: Dismissible(            
-                  key: Key(item),
-                  direction: DismissDirection.endToStart,
-                  confirmDismiss: (_) {
-                    return showDialog(
-                      context: context,
-                       builder: (_) =>  AlertDialog(
-                        title: const Text('Eliminar'),
-                        content: const Text('Desea eliminar el Producto?'),
-                        actions: [
-                          TextButton(onPressed: () {
-                             Navigator.of(context).pop(false);
-                          }, child: const Text('No')),
-                            TextButton(onPressed: (){
-                               Navigator.of(context).pop(true);
-                            },
-                           child: const Text('Sí')),
-                        ],    
-                       ));
-                  },
-                  onDismissed: (direction) { 
-                        
-                      setState(() {
-                            widget.orden.detalles.removeAt(index); 
-                      });          
-                  },
-                  background: Container(              
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    decoration: BoxDecoration(
-                      color: const Color.fromARGB(255, 231, 216, 216),
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                    child: Row(
-                      children: [
-                        const Spacer(),
-                        SvgPicture.asset("assets/Trash.svg"),
-                      ],
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      SizedBox(
-                        width: 88,
-                        child: AspectRatio(
-                          aspectRatio: 0.88,
-                          child: Container(
-                            padding: EdgeInsets.all(getProportionateScreenWidth(5)),
-                            decoration: const BoxDecoration(
-                              color: Colors.white,
-                               borderRadius: BorderRadius.only(topLeft: Radius.circular(15) , bottomLeft: Radius.circular(15))
-                            ),
-                            child:  const Image(image: AssetImage('assets/rollostela.png')),
-                                    
-                          ),
-                        ),
-                      ),                         
-                      const SizedBox(width: 20),
-                      Expanded(
+    final cart = context.watch<CartProvider>();
+    return ListView.builder(
+      padding: const EdgeInsets.all(20),
+      itemCount: cart.itemCount,
+      itemBuilder: (context, index) {
+        final detalle = cart.items[index];
+        final itemKey = detalle.codigoRollo.toString();
+
+        return Container(
+          margin: const EdgeInsets.only(bottom: 16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: Dismissible(
+              key: Key(itemKey),
+              direction: DismissDirection.endToStart,
+              confirmDismiss: (_) => _confirmDelete(),
+              onDismissed: (_) {
+                cart.removeItem(index);
+              },
+              background: Container(
+                alignment: Alignment.centerRight,
+                padding: const EdgeInsets.only(right: 20),
+                color: kColorRed.withValues(alpha: 0.1),
+                child: const Icon(
+                  Icons.delete_outline,
+                  color: kColorRed,
+                  size: 28,
+                ),
+              ),
+              child: IntrinsicHeight(
+                child: Row(
+                  children: [
+                    // Color strip
+                    Container(width: 6, color: kPrimaryColor),
+
+                    // Product Details
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                          TextEncabezado(texto: widget.orden.detalles[index].producto.toString()),
-                          TextEncabezado(texto: widget.orden.detalles[index].color.toString()),
-                             Row(children: [
-                              const TextEncabezado(texto:'Cantidad: '),
-                            
-                               TextDerecha(texto: widget.orden.detalles[index].cantidad.toString()),
-                            ],),
-                             Row(children: [
-                              const TextEncabezado(texto:'Precio: '),
-                           
-                               TextDerecha(texto: NumberFormat("###,000", "es_CO").format(widget.orden.detalles[index].price)),
-                            ],),
-                             Row(children: [
-                              const TextEncabezado(texto:'Total: '),
-                            
-                               TextDerecha(texto: NumberFormat("###,000", "es_CO").format(widget.orden.detalles[index].total)),
-                            ],),             
+                            Text(
+                              detalle.producto ?? "Sin nombre",
+                              style: GoogleFonts.oswald(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: kPrimaryColor,
+                              ),
+                            ),
+                            Text(
+                              detalle.color ?? "Color no especificado",
+                              style: GoogleFonts.poppins(
+                                fontSize: 13,
+                                color: Colors.grey[600],
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            Row(
+                              children: [
+                                _buildInfoChip(
+                                  Icons.straighten,
+                                  '${detalle.cantidad} m',
+                                ),
+                                const SizedBox(width: 12),
+                                _buildInfoChip(
+                                  Icons.sell_outlined,
+                                  '\$${NumberFormat("###,000", "es_CO").format(detalle.price)}',
+                                ),
+                              ],
+                            ),
+                            const Spacer(),
+                            const SizedBox(height: 8),
+                            Text(
+                              '\$${NumberFormat("###,000", "es_CO").format(detalle.total)}',
+                              style: GoogleFonts.oswald(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: kPrimaryColor,
+                              ),
+                            ),
                           ],
                         ),
                       ),
-                       Padding(
-                        padding: const EdgeInsets.only(top: 3, bottom: 3),
+                    ),
+
+                    // Edit Button
+                    Padding(
+                      padding: const EdgeInsets.only(right: 12),
+                      child: Center(
                         child: RawMaterialButton(
-                          onPressed: () => _showFilter(widget.orden.detalles[index]),
+                          onPressed: () => _showFilter(detalle),
                           elevation: 2.0,
-                          fillColor: const Color.fromARGB(255, 228, 198, 67),
-                          padding: const EdgeInsets.all(12.0),
+                          fillColor: const Color(0xFFE4C643),
+                          padding: const EdgeInsets.all(8.0),
                           shape: const CircleBorder(),
                           child: const Icon(
-                            Icons.edit,
-                            size: 25.0,
+                            Icons.edit_outlined,
+                            size: 22.0,
+                            color: Colors.black87,
                           ),
                         ),
-                      ),                    
-                    ],
-                  ), 
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            );
-          }        
-        ),
-        ),
-      );
-  }
-  
-  void goOut() async  {
-     Navigator.of(context).pushReplacement(  
-      MaterialPageRoute(
-        builder: (context) => PedidosScreen(user: widget.user,)
-    ));                      
+            ),
+          ),
+        );
+      },
+    );
   }
 
-   Future  _showFilter(Detalle detalle) => showDialog(
-     context: context,
-     builder: (context) => StatefulBuilder(
-       builder: (context, setState) => AlertDialog(
-         shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
+  Widget _buildInfoChip(IconData icon, String text) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: kPrimaryColor.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: kPrimaryColor.withValues(alpha: 0.6)),
+          const SizedBox(width: 4),
+          Text(
+            text,
+            style: GoogleFonts.poppins(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: kPrimaryColor.withValues(alpha: 0.7),
+            ),
           ),
-          title:  Text('${detalle.producto} ${detalle.color}'),         
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[           
-             const Divider(color: Colors.black, height: 11,),            
-            Container(
-                  padding: const EdgeInsets.only(left: 50.0, right: 50),      
-                  child:  TextField(
-                    onChanged: (value) {
-                      _cantidad = value;
-                    },
-                    keyboardType: TextInputType.number,
-                    decoration:  const InputDecoration(
-                      
-                      labelText: 'Cantidad',
-                                        
-                      suffixIcon:  Icon(Icons.numbers),
-                  ),
+        ],
+      ),
+    );
+  }
+
+  Future<bool?> _confirmDelete() {
+    return showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('¿Eliminar?'),
+        content: const Text('¿Desea eliminar este producto de la orden?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('No'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Sí'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _showFilter(Detalle detalle) => showDialog(
+    context: context,
+    builder: (context) {
+      double cantidad = detalle.cantidad ?? 0.0;
+      double precio = detalle.price ?? 0.0;
+
+      TextEditingController cantidadController = TextEditingController(
+        text: cantidad.toString(),
+      );
+      TextEditingController precioController = TextEditingController(
+        text: precio.toString(),
+      );
+
+      return StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(28),
+          ),
+          contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 12),
+          title: Column(
+            children: [
+              Text(
+                'Editar Producto',
+                style: GoogleFonts.oswald(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: kPrimaryColor,
                 ),
               ),
-             Container(
-                  padding: const EdgeInsets.only(left: 50.0, right: 50),      
-                  child:  TextField(
-                    onChanged: (value) {
-                      _precio = value;
-                    },
-                    keyboardType: TextInputType.number,
-                    decoration:  const InputDecoration(
-                      
-                      labelText: 'Precio',
-                                        
-                      suffixIcon:  Icon(Icons.money),
-                  ),
+              const SizedBox(height: 4),
+              Text(
+                '${detalle.producto} - ${detalle.color}',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.poppins(
+                  fontSize: 13,
+                  color: Colors.grey[600],
                 ),
               ),
-             const SizedBox(height: 10,),
+              const SizedBox(height: 15),
+              const Divider(),
             ],
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                // Quantity Section
+                _buildEditRow(
+                  label: "Cantidad (m)",
+                  icon: Icons.straighten,
+                  controller: cantidadController,
+                  onDecrement: () {
+                    setState(() {
+                      cantidad = (cantidad - 0.5).clamp(0.0, double.infinity);
+                      cantidadController.text = cantidad.toStringAsFixed(1);
+                    });
+                  },
+                  onIncrement: () {
+                    setState(() {
+                      cantidad += 0.5;
+                      cantidadController.text = cantidad.toStringAsFixed(1);
+                    });
+                  },
+                  onChanged: (v) => cantidad = double.tryParse(v) ?? 0.0,
+                ),
+
+                const SizedBox(height: 25),
+
+                // Price Section
+                _buildEditRow(
+                  label: "Precio (\$)",
+                  icon: Icons.payments_outlined,
+                  controller: precioController,
+                  onDecrement: () {
+                    setState(() {
+                      precio = (precio - 100).clamp(0.0, double.infinity);
+                      precioController.text = precio.toStringAsFixed(0);
+                    });
+                  },
+                  onIncrement: () {
+                    setState(() {
+                      precio += 100;
+                      precioController.text = precio.toStringAsFixed(0);
+                    });
+                  },
+                  onChanged: (v) => precio = double.tryParse(v) ?? 0.0,
+                ),
+              ],
+            ),
           ),
           actions: <Widget>[
             TextButton(
-              onPressed: () => Navigator.of(context).pop(), 
-              child: const Text(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(
                 'Cancelar',
-               )
+                style: GoogleFonts.poppins(
+                  color: Colors.grey[600],
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
-            TextButton(
-              onPressed: () => _editar(detalle), 
-              child: const Text(
-                'Cambiar',
-               )
+            ElevatedButton(
+              onPressed: () {
+                detalle.cantidad = cantidad;
+                detalle.price = precio;
+                detalle.total = precio * cantidad;
+                context.read<CartProvider>().addItem(detalle);
+                _editar();
+                Navigator.of(context).pop();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFE4C643),
+                foregroundColor: Colors.black87,
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 12,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: Text(
+                'Guardar Cambios',
+                style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+              ),
             ),
           ],
         ),
-       ),
-   );
-   
-  _editar(Detalle detalle) {
-    setState(() {
-      for (var item in widget.orden.detalles){
-      if(item.codigoRollo==detalle.codigoRollo){
-        if(_precio != ''){
-              item.price = double.parse(_precio);
-        }
-          if(_cantidad != ''){
-              item.cantidad = double.parse(_cantidad);
-        }
-          item.total= item.price! * item.cantidad!;
-      }
-    }
-    });
-      Navigator.of(context).pop();    
-  }
- 
-  void showErrorFromDialog(String msg) async {
-    await showAlertDialog(
-        context: context,
-        title: 'Error', 
-        message: msg,
-        actions: <AlertDialogAction>[
-            const AlertDialogAction(key: null, label: 'Aceptar'),
-        ]
-      );       
+      );
+    },
+  );
+
+  _editar() {
+    setState(() {});
   }
 
+  Widget _buildEditRow({
+    required String label,
+    required IconData icon,
+    required TextEditingController controller,
+    required VoidCallback onDecrement,
+    required VoidCallback onIncrement,
+    required Function(String) onChanged,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(icon, size: 16, color: kPrimaryColor.withValues(alpha: 0.5)),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: GoogleFonts.poppins(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: Colors.black87,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            _buildCircularButton(
+              Icons.remove,
+              onDecrement,
+              Colors.grey[100]!,
+              Colors.black54,
+            ),
+            const SizedBox(width: 15),
+            Expanded(
+              child: TextField(
+                controller: controller,
+                textAlign: TextAlign.center,
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                onChanged: onChanged,
+                style: GoogleFonts.oswald(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: kPrimaryColor,
+                ),
+                decoration: InputDecoration(
+                  contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                  isDense: true,
+                  filled: true,
+                  fillColor: Colors.grey[50],
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.grey[200]!),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(
+                      color: kPrimaryColor,
+                      width: 1.5,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 15),
+            _buildCircularButton(
+              Icons.add,
+              onIncrement,
+              kPrimaryColor.withValues(alpha: 0.1),
+              kPrimaryColor,
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCircularButton(
+    IconData icon,
+    VoidCallback onTap,
+    Color bgColor,
+    Color iconColor,
+  ) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(color: bgColor, shape: BoxShape.circle),
+        child: Icon(icon, size: 20, color: iconColor),
+      ),
+    );
+  }
+
+  void showErrorFromDialog(String msg) async {
+    await showAlertDialog(
+      context: context,
+      title: 'Error',
+      message: msg,
+      actions: <AlertDialogAction>[
+        const AlertDialogAction(key: null, label: 'Aceptar'),
+      ],
+    );
+  }
 }

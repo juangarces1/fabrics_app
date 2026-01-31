@@ -13,11 +13,10 @@ class Descuento {
     id = json['id'];
     date = json['date'];
     tipo = json['tipo'];
-    descuento = json['descuento'];
+    descuento = json['descuento']?.toDouble();
     employee = json['employee'] != null
         ? User.fromJson(json['employee'])
-        : null
-    ;
+        : null;
   }
 
   Map<String, dynamic> toJson() {
@@ -32,4 +31,3 @@ class Descuento {
     return data;
   }
 }
-

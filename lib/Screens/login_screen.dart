@@ -1,20 +1,18 @@
-
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:fabrics_app/Components/default_button.dart';
 import 'package:fabrics_app/Components/loader_component.dart';
 import 'package:fabrics_app/Helpers/constans.dart';
 import 'package:fabrics_app/Models/user.dart';
-import 'package:fabrics_app/Screens/home_screen.dart';
+import 'package:fabrics_app/Screens/home_screen_modern.dart';
 import 'package:fabrics_app/constans.dart';
-
-
+import 'package:google_fonts/google_fonts.dart';
+import 'dart:ui';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({ super.key });
+  const LoginScreen({super.key});
 
   @override
   // ignore: library_private_types_in_public_api
@@ -22,8 +20,6 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-
-
   String _password = '';
   String _passwordError = '';
   bool _passwordShowError = false;
@@ -35,33 +31,107 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    
     return Scaffold(
-      body: 
-      Container(
-        color: kColorFondoOscuro,
-        child: Stack(
-          children: <Widget>[
-            SingleChildScrollView(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  const SizedBox(height: 100,), 
-                  const Text('TexApp', style: TextStyle(color: kContrastColor, fontSize: 30, fontWeight: FontWeight.bold, ),),
-                     const SizedBox(height: 20,),
-                  _showLogo(),              
-                  const SizedBox(height: 20,),
-                
-                  _showPassword(),
-                  _showRememberme(),
-                  _showButtons(),
-                  
-                ],
+      body: Stack(
+        children: [
+          // Background Gradient
+          Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [kPrimaryColor, kColorHomeBar, Color(0xFF020420)],
               ),
             ),
-            _showLoader ? const LoaderComponent(text: 'Por favor espere...') : Container(),
-          ],
-        ),
+          ),
+          // Subtle background decoration
+          Positioned(
+            top: -100,
+            right: -100,
+            child: Container(
+              width: 300,
+              height: 300,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withValues(alpha: 0.05),
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: -50,
+            left: -50,
+            child: Container(
+              width: 200,
+              height: 200,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: kColorAlternativo.withValues(alpha: 0.1),
+              ),
+            ),
+          ),
+          SafeArea(
+            child: Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 30),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    _showLogo(),
+                    const SizedBox(height: 20),
+                    Text(
+                      'TexApp',
+                      style: GoogleFonts.oswald(
+                        color: Colors.white,
+                        fontSize: 48,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 2,
+                      ),
+                    ),
+                    Text(
+                      'SISTEMA DE GESTION',
+                      style: GoogleFonts.poppins(
+                        color: Colors.white70,
+                        fontSize: 12,
+                        letterSpacing: 4,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 50),
+
+                    // Glass Card
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(30),
+                      child: BackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+                        child: Container(
+                          padding: const EdgeInsets.all(25),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(30),
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.2),
+                              width: 1.5,
+                            ),
+                          ),
+                          child: Column(
+                            children: [
+                              _showPassword(),
+                              const SizedBox(height: 10),
+                              _showRememberme(),
+                              const SizedBox(height: 20),
+                              _showLoginButton(),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          if (_showLoader) const LoaderComponent(text: 'Iniciando sesión...'),
+        ],
       ),
     );
   }
@@ -69,110 +139,160 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget _showLogo() {
     return const Image(
       image: AssetImage('assets/rollostela.png'),
-      width: 200,
+      width: 150,
       fit: BoxFit.fill,
     );
   }
 
   Widget _showPassword() {
-    return Container(
-     padding: const EdgeInsets.only(left: 30, right: 30, bottom: 10),
-      child: TextField(
-         style:  const TextStyle(color: Colors.white ),  
-        obscureText: !_passwordShow,
-        decoration: InputDecoration(
-           labelStyle: const TextStyle(color: Colors.white ),
-          hintStyle: const TextStyle(color: Colors.white ),
-          errorStyle: const TextStyle(color: Colors.white ),
-          suffixStyle:  const TextStyle(color: Colors.white ),
-          hintText: 'Ingresa tu contraseña...',
-          labelText: 'Contraseña',
-          errorText: _passwordShowError ? _passwordError : null,
-          prefixIcon: const Icon(Icons.lock,  color: Colors.white,),
-          suffixIcon: IconButton(
-            icon: _passwordShow ? const Icon(Icons.visibility,  color: Colors.white,) : const Icon(Icons.visibility_off,  color: Colors.white,),
-            onPressed: () {
-              setState(() {
-                _passwordShow = !_passwordShow;
-              });
-            }, 
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 10, bottom: 8),
+          child: Text(
+            "Tu Contraseña",
+            style: GoogleFonts.poppins(
+              color: Colors.white70,
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+            ),
           ),
-           enabledBorder:  OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10), 
-              borderSide: const BorderSide(color: Colors.white, width: 1.0),
-          ),  
         ),
-        onChanged: (value) {
-          _password = value;
-        },
-      ),
+        TextField(
+          style: GoogleFonts.poppins(color: Colors.white, fontSize: 16),
+          obscureText: !_passwordShow,
+          decoration: InputDecoration(
+            hintText: '••••••••',
+            hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3)),
+            errorStyle: const TextStyle(color: Color(0xFFFF8A8A)),
+            errorText: _passwordShowError ? _passwordError : null,
+            prefixIcon: const Icon(
+              Icons.lock_outline_rounded,
+              color: Colors.white70,
+            ),
+            suffixIcon: IconButton(
+              icon: Icon(
+                _passwordShow
+                    ? Icons.visibility_outlined
+                    : Icons.visibility_off_outlined,
+                color: Colors.white70,
+                size: 20,
+              ),
+              onPressed: () => setState(() => _passwordShow = !_passwordShow),
+            ),
+            filled: true,
+            fillColor: Colors.white.withValues(alpha: 0.05),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(20),
+              borderSide: BorderSide(
+                color: Colors.white.withValues(alpha: 0.1),
+              ),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(20),
+              borderSide: BorderSide(
+                color: Colors.white.withValues(alpha: 0.1),
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(20),
+              borderSide: const BorderSide(color: kColorAlternativo, width: 2),
+            ),
+          ),
+          onChanged: (value) => _password = value,
+        ),
+      ],
     );
   }
 
   Widget _showRememberme() {
-    return Padding(
-      padding: const EdgeInsets.only(left: 30, right: 30, bottom: 5),
+    return Theme(
+      data: ThemeData(unselectedWidgetColor: Colors.white54),
       child: CheckboxListTile(
-        title: const Text('Recuerdame', style:  TextStyle(color: Colors.white ),),
+        contentPadding: EdgeInsets.zero,
+        title: Text(
+          'Recordar cuenta',
+          style: GoogleFonts.poppins(color: Colors.white70, fontSize: 14),
+        ),
         value: _rememberme,
-        onChanged: (value) {  
-          setState(() {
-            _rememberme = value!;
-          });
-        }, 
+        activeColor: kColorAlternativo,
+        checkColor: Colors.white,
+        onChanged: (value) => setState(() => _rememberme = value!),
+        controlAffinity: ListTileControlAffinity.leading,
       ),
     );
   }
 
-   Widget _showButtons() {
+  Widget _showLoginButton() {
     return Container(
-      margin: const EdgeInsets.only(left: 30, right: 30, bottom: 20),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: <Widget>[
-          _showLoginButton(),
+      width: double.infinity,
+      height: 60,
+      decoration: BoxDecoration(
+        gradient: kGradientTexApp,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xffc91047).withValues(alpha: 0.3),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+          ),
         ],
       ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: _login,
+          borderRadius: BorderRadius.circular(20),
+          child: Center(
+            child: Text(
+              'INICIAR SESIÓN',
+              style: GoogleFonts.poppins(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+                letterSpacing: 1.5,
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 
-void _storeUser(String body) async {
+  void _storeUser(String body) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setBool('isRemembered', true);
     await prefs.setString('userBody', body);
   }
-
 
   void _login() async {
     setState(() {
       _passwordShow = false;
     });
 
-    if(!_validateFields()) {
+    if (!_validateFields()) {
       return;
     }
 
     setState(() {
       _showLoader = true;
     });
-     
 
     var url = Uri.parse('${Constans.apiUrl}/api/Kilos/LogIn/$_password');
     var response = await http.get(
       url,
       headers: {
-        'content-type' : 'application/json',
-        'accept' : 'application/json',
+        'content-type': 'application/json',
+        'accept': 'application/json',
       },
-     
-    
     );
 
     setState(() {
       _showLoader = false;
     });
 
-    if(response.statusCode >= 400) {
+    if (response.statusCode >= 400) {
       setState(() {
         _passwordShowError = true;
         _passwordError = "Contraseña incorrecta";
@@ -187,46 +307,31 @@ void _storeUser(String body) async {
     }
 
     var decodedJson = jsonDecode(body);
-    
-    User user = User.fromJson(decodedJson);
-    
-    goHome(user);
 
-   
+    User user = User.fromJson(decodedJson);
+
+    goHome(user);
   }
 
   bool _validateFields() {
     bool isValid = true;
 
-  
-
     if (_password.isEmpty) {
       isValid = false;
       _passwordShowError = true;
       _passwordError = 'Debes ingresar tu contraseña.';
-    }  else {
+    } else {
       _passwordShowError = false;
     }
 
-    setState(() { });
+    setState(() {});
     return isValid;
   }
 
-  Widget _showLoginButton() {
-    return DefaultButton(text: 'Iniciar Sesion', press: () => _login(),);
-  }
-  
   void goHome(User user) {
-  
-     Navigator.pushReplacement(
-      context, 
-      MaterialPageRoute(
-        builder: (context) => HomeScreen(user: user,)
-      )
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => HomeScreenModern(user: user)),
     );
-
   }
-  
-
 }
-

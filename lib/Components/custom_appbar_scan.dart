@@ -1,79 +1,116 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../../constans.dart';
 import '../../../sizeconfig.dart';
 
-class CustomAppBarScan extends StatefulWidget { 
- 
+class CustomAppBarScan extends StatelessWidget implements PreferredSizeWidget {
   final Function? press;
-  final Text titulo;
- 
-  final AssetImage image;
-  // ignore: use_key_in_widget_constructors
+  final Widget titulo;
+  final List<Widget>? actions;
+  final AssetImage? image;
+
   const CustomAppBarScan({
-    this.press, required this.titulo,  required this.image
+    super.key,
+    this.press,
+    required this.titulo,
+    this.actions,
+    this.image,
   });
 
   @override
-  State<CustomAppBarScan> createState() => _CustomAppBarScanState();
-}
-
-class _CustomAppBarScanState extends State<CustomAppBarScan> {
-  // AppBar().preferredSize.height provide us the height that appy on our app bar
-  Size get preferredSize => Size.fromHeight(AppBar().preferredSize.height);
+  Size get preferredSize => const Size.fromHeight(75);
 
   @override
   Widget build(BuildContext context) {
     return Container(
-     
-    
-        decoration:  const BoxDecoration(
-          gradient: kGradientHome,
-                ),
+      decoration: const BoxDecoration(
+        gradient: kGradientHome,
+        borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(15),
+          bottomRight: Radius.circular(15),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black12,
+            blurRadius: 10,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
       child: Padding(
-        padding:
-            EdgeInsets.symmetric(horizontal: getProportionateScreenWidth(20), vertical: getProportionateScreenHeight(10)),
+        padding: EdgeInsets.symmetric(
+          horizontal: getProportionateScreenWidth(16),
+          vertical: 20,
+        ),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            SizedBox(
-              height: getProportionateScreenHeight(40),
-              width: getProportionateScreenWidth(40),
-              child: TextButton(
-                style: TextButton.styleFrom(
-                  foregroundColor: kPrimaryColor, shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(60),
-                  ),
-                  backgroundColor:  Colors.white,
-                  padding: EdgeInsets.zero,
+            // Back Button
+            if (press != null)
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.1),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
                 ),
-                onPressed: widget.press as void Function()?,             
-                                          
-                child: SvgPicture.asset(
-                  "assets/Back ICon.svg",
-                  height: 15,
-                  color: kPrimaryColor,
+                child: IconButton(
+                  onPressed: press as void Function()?,
+                  icon: SvgPicture.asset(
+                    "assets/Back ICon.svg",
+                    height: 14,
+                    color: kPrimaryColor,
+                  ),
+                ),
+              ),
+
+            // Title Badge
+            Expanded(
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                // decoration: BoxDecoration(
+                //   color: Colors.white.withValues(alpha: 0.15),
+                //   borderRadius: BorderRadius.circular(16),
+                //   border: Border.all(
+                //     color: Colors.white.withValues(alpha: 0.2),
+                //     width: 1.5,
+                //   ),
+                // ),
+                child: Center(
+                  child: FittedBox(fit: BoxFit.scaleDown, child: titulo),
                 ),
               ),
             ),
-            const SizedBox(width: 10,),
-            Container(
-          
-              padding: const EdgeInsets.only(left: 10, right: 10),
-              decoration: BoxDecoration(
-                color: const Color.fromARGB(255, 39, 38, 38).withOpacity(0.8),
-                borderRadius: BorderRadius.circular(10),
+
+            // Actions or Image
+            if (actions != null)
+              ...actions!
+            else if (image != null)
+              Opacity(
+                opacity: 0.9,
+                child: Container(
+                  height: 40,
+                  width: 40,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                    image: DecorationImage(image: image!, fit: BoxFit.cover),
+                  ),
+                ),
               ),
-              child:   Center(child: widget.titulo),
-                 
-            )
           ],
         ),
       ),
     );
   }
-
- 
 }
